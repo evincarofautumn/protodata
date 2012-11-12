@@ -1,7 +1,11 @@
-CXX ?= g++
+CXXFLAGS=-std=c++0x
+CPPFLAGS=-I. -Ivendor -MD -MP
+SRC=main.cpp
 
 .PHONY : all
 all : pd
 
-pd : $(wildcard ./*.cpp)
-	$(CXX) -std=c++0x -I. -Ivendor $+ -o $@
+pd : $(SRC:%.cpp=%.o)
+	$(CXX) -o $@ $^
+
+-include $(SRC:%.cpp=%.d)
