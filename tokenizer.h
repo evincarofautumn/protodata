@@ -33,18 +33,18 @@ private:
     auto output(utf8_output_encoder(output_iterator(back_inserter(token))));
     while (accept_if(is_whitespace, input, ignore)) {}
     if (input.empty()) return;
-    if (accept(0x007b, input, ignore)) {
+    if (accept(U'{', input, ignore)) {
       buffer.push_back(Token::push());
-    } else if (accept(0x007d, input, ignore)) {
+    } else if (accept(U'}', input, ignore)) {
       buffer.push_back(Token::pop());
-    } else if (accept(0x0030, input, ignore)) {
+    } else if (accept(U'0', input, ignore)) {
       throw runtime_error("Not implemented: zero stuff.");
     } else if (accept_if(is_numeric, input, output)) {
       while (accept_if(is_numeric, input, output)
-        || accept(0x005f, input, ignore)) {}
-      if (accept(0x002e, input, output)) {
+        || accept(U'_', input, ignore)) {}
+      if (accept(U'.', input, output)) {
         while (accept_if(is_numeric, input, output)
-          || accept(0x005f, input, ignore)) {}
+          || accept(U'_', input, ignore)) {}
         istringstream stream(token);
         double value;
         if (!(stream >> value))
