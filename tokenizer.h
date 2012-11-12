@@ -40,7 +40,7 @@ private:
     } else if (accept_if(is_alphabetic, input, output)) {
       while (accept_if(is_alphanumeric, input, output)) {}
       throw runtime_error(join("Unknown keyword: \"", token, "\"."));
-    } else if (!input.empty()) {
+    } else {
       throw runtime_error(join("Invalid character '", input.front(), "'."));
     }
   }
