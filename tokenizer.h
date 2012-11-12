@@ -37,6 +37,27 @@ private:
       buffer.push_back(Token::push());
     } else if (accept(0x007d, input, ignore)) {
       buffer.push_back(Token::pop());
+    } else if (accept(0x0030, input, ignore)) {
+      throw runtime_error("Not implemented: zero stuff.");
+    } else if (accept_if(is_numeric, input, output)) {
+      while (accept_if(is_numeric, input, output)
+        || accept(0x005f, input, ignore)) {}
+      if (accept(0x002e, input, output)) {
+        while (accept_if(is_numeric, input, output)
+          || accept(0x005f, input, ignore)) {}
+        istringstream stream(token);
+        double value;
+        if (!(stream >> value))
+          throw runtime_error
+            (join("Invalid floating-point literal: \"", token, "\""));
+        buffer.push_back(Token::write(value));
+      } else {
+        istringstream stream(token);
+        uint64_t value;
+        if (!(stream >> value))
+          throw runtime_error(join("Invalid integer literal: \"", token, "\""));
+        buffer.push_back(Token::write(value));
+      }
     } else if (accept_if(is_alphabetic, input, output)) {
       while (accept_if(is_alphanumeric, input, output)) {}
       throw runtime_error(join("Unknown keyword: \"", token, "\"."));
