@@ -2,12 +2,12 @@
 #define PROTODATA_CHARTYPE_H
 
 inline bool is_alphabetic(uint32_t rune) {
-  return (rune >= 0x41 && rune <= 0x5a)
-    || (rune >= 0x61 && rune <= 0x7a);
+  return (rune >= 0x0041 && rune <= 0x005a)
+    || (rune >= 0x0061 && rune <= 0x007a);
 }
 
 inline bool is_numeric(uint32_t rune) {
-  return rune >= 0x30 && rune <= 0x39;
+  return rune >= 0x0030 && rune <= 0x0039;
 }
 
 inline bool is_alphanumeric(uint32_t rune) {
@@ -15,7 +15,7 @@ inline bool is_alphanumeric(uint32_t rune) {
 }
 
 inline bool is_whitespace(uint32_t rune) {
-  return rune == 0x20 || (rune >= 0x09 && rune <= 0x0d);
+  return rune == 0x0020 || (rune >= 0x0009 && rune <= 0x000d);
 }
 
 #endif

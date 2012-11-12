@@ -33,9 +33,9 @@ private:
     auto output(utf8_output_encoder(output_iterator(back_inserter(token))));
     while (accept_if(is_whitespace, input, ignore)) {}
     if (input.empty()) return;
-    if (accept(0x7b, input, ignore)) {
+    if (accept(0x007b, input, ignore)) {
       buffer.push_back(Token::push());
-    } else if (accept(0x7d, input, ignore)) {
+    } else if (accept(0x007d, input, ignore)) {
       buffer.push_back(Token::pop());
     } else if (accept_if(is_alphabetic, input, output)) {
       while (accept_if(is_alphanumeric, input, output)) {}
