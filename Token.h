@@ -1,5 +1,6 @@
 #ifndef PROTODATA_TOKEN_H
 #define PROTODATA_TOKEN_H
+#include <iomanip>
 #include <iostream>
 
 class Token {
@@ -36,11 +37,21 @@ public:
     return token;
   }
   friend std::ostream& operator<<(std::ostream& stream, const Token& token) {
+    std::ios state(0);
+    state.copyfmt(stream);
     switch (token.type) {
-    case PUSH:  return stream << "push";
-    case POP:   return stream << "pop";
-    case WRITE: return stream << "write";
+    case PUSH:
+      stream << "push";
+      break;
+    case POP:
+      stream << "pop";
+      break;
+    case WRITE:
+      stream << "write(0x" << std::hex << std::setw(16)
+        << std::setfill('0') << token.value.as_unsigned << ")";
+      break;
     }
+    stream.copyfmt(state);
   }
 private:
   enum Type {
