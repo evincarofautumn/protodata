@@ -1,15 +1,8 @@
-#include <vendor/utf8.h>
-
-#include <cctype>
-#include <cstdint>
 #include <cstring>
 #include <fstream>
-#include <iomanip>
 #include <iostream>
 #include <iterator>
 #include <memory>
-#include <stack>
-#include <vector>
 
 #include <rx/algorithm.h>
 #include <rx/istreamer.h>
@@ -35,7 +28,6 @@ int main(int argc, char** argv) try {
   unique_ptr<ostream, ostream_deleter> output
     (argc < 2 || strcmp(argv[1], "-") == 0
       ? &cout : new ofstream(argv[1], ios::binary));
-  *output << hex;
   copy(tokenizer(utf8_input_decoder(istreamer(*input))),
     output_iterator(ostream_iterator<Token>(*output, "\n")));
 } catch (const std::exception& exception) {
