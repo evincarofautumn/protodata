@@ -38,25 +38,36 @@ private:
     } else if (accept(U'}', input, ignore)) {
       buffer.push_back(Token::pop());
     } else if (accept(U'0', input, ignore)) {
-      throw runtime_error("Not implemented: zero stuff.");
-    } else if (accept_if(is_numeric, input, output)) {
-      while (accept_if(is_numeric, input, output)
+      if (accept(U'b', input, ignore)) {
+        while (accept_if(is_binary, input, output)
+          || accept(U'_', input, ignore)) {}
+        buffer.push_back(write_signed(token, 2));
+      } else if (accept(U'o', input, ignore)) {
+        while (accept_if(is_octal, input, output)
+          || accept(U'_', input, ignore)) {}
+        buffer.push_back(write_signed(token, 8));
+      } else if (accept(U'x', input, ignore)) {
+        while (accept_if(is_hexadecimal, input, output)
+          || accept(U'_', input, ignore)) {}
+        buffer.push_back(write_signed(token, 16));
+      } else if (accept(U'.', input, output)) {
+        while (accept_if(is_decimal, input, output)
+          || accept(U'_', input, ignore)) {}
+        buffer.push_back(write_double(token));
+      } else {
+        while (accept_if(is_decimal, input, output)
+          || accept(U'_', input, ignore)) {}
+        buffer.push_back(write_signed(token, 10));
+      }
+    } else if (accept_if(is_decimal, input, output)) {
+      while (accept_if(is_decimal, input, output)
         || accept(U'_', input, ignore)) {}
       if (accept(U'.', input, output)) {
-        while (accept_if(is_numeric, input, output)
+        while (accept_if(is_decimal, input, output)
           || accept(U'_', input, ignore)) {}
-        istringstream stream(token);
-        double value;
-        if (!(stream >> value))
-          throw runtime_error
-            (join("Invalid floating-point literal: \"", token, "\""));
-        buffer.push_back(Token::write(value));
+        buffer.push_back(write_double(token));
       } else {
-        istringstream stream(token);
-        uint64_t value;
-        if (!(stream >> value))
-          throw runtime_error(join("Invalid integer literal: \"", token, "\""));
-        buffer.push_back(Token::write(value));
+        buffer.push_back(write_signed(token, 10));
       }
     } else if (accept_if(is_alphabetic, input, output)) {
       while (accept_if(is_alphanumeric, input, output)) {}
@@ -64,6 +75,30 @@ private:
     } else {
       throw runtime_error(join("Invalid character '", input.front(), "'."));
     }
+  }
+  Token write_signed(const std::string& token, int base) {
+    char* boundary;
+    const auto value = std::strtoll(token.c_str(), &boundary, base);
+    if (boundary != token.c_str() + token.size())
+      throw std::runtime_error(join("Invalid base-", base,
+        " signed integer literal: \"", token, "\""));
+    return Token::write(int64_t(value));
+  }
+  Token write_unsigned(const std::string& token, int base) {
+    char* boundary;
+    const auto value = std::strtoull(token.c_str(), &boundary, base);
+    if (boundary != token.c_str() + token.size())
+      throw std::runtime_error(join("Invalid base-", base,
+        " unsigned integer literal: \"", token, "\""));
+    return Token::write(uint64_t(value));
+  }
+  Token write_double(const std::string& token) {
+    char* boundary;
+    const auto value = std::strtod(token.c_str(), &boundary);
+    if (boundary != token.c_str() + token.size())
+      throw std::runtime_error
+        (join("Invalid floating-point literal: \"", token, "\""));
+    return Token::write(value);
   }
   R input;
   std::deque<Token> buffer;
