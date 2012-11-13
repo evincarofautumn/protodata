@@ -94,7 +94,10 @@ private:
       Many(AcceptIf(is_alphanumeric))
       throw runtime_error(join("Unknown keyword: \"", token, "\"."));
     } else {
-      throw runtime_error(join("Invalid character '", input.front(), "'."));
+      string message("Invalid character: '");
+      utf8::append(input.front(), back_inserter(message));
+      message += "'.";
+      throw runtime_error(message);
     }
 
   }
