@@ -1,0 +1,11 @@
+# Comment.
+0
+# Comment also.
+
+# No intervening statement.
+# No intervening whitespace.
+
+        # Indented.
+0.5#Smushed into value.
+
+# Ending at EOF.
