@@ -9,9 +9,15 @@ namespace rx {
 template<class R>
 class utf8_input_decoder_t {
 public:
-  utf8_input_decoder_t(R&& range) : input(std::move(range)) { advance(); }
-  bool empty() const { return input.empty(); }
-  void pop_front() { advance(); }
+  utf8_input_decoder_t(R&& range)
+    : input(std::move(range)), used(false) {
+    advance();
+  }
+  bool empty() const { return input.empty() && used; }
+  void pop_front() {
+    used = true;
+    advance();
+  }
   uint32_t front() const { return current; }
 private:
   // Read octets until a valid UTF-8 sequence appears or
@@ -25,6 +31,7 @@ private:
       const auto error = validate_next(boundary, buffer.end(), current);
       if (error == utf8::internal::UTF8_OK) {
         buffer.erase(buffer.begin(), boundary);
+	used = false;
         break;
       } else if (buffer.size() >= max_utf8_size) {
 	throw std::runtime_error("Invalid UTF-8 in input.");
@@ -35,6 +42,7 @@ private:
   R input;
   std::vector<char> buffer;
   uint32_t current;
+  bool used;
 };
 
 template<class R>
