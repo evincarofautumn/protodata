@@ -41,6 +41,13 @@ public:
 
 private:
 
+# define Accept(X) accept(X, input, append)
+# define AcceptIf(X) accept_if(X, input, append)
+# define Ignore(X) accept(X, input, ignore)
+# define IgnoreIf(X) accept_if(X, input, ignore)
+# define Many(X) while (X) {}
+# define Output(X) output.put(X);
+
   template<class O>
   void advance(O output) {
 
@@ -51,14 +58,7 @@ private:
     ignorer ignore;
     auto append(utf8_output_encoder(output_iterator(back_inserter(token))));
 
-#   define Accept(X) accept(X, input, append)
-#   define AcceptIf(X) accept_if(X, input, append)
-#   define Ignore(X) accept(X, input, ignore)
-#   define IgnoreIf(X) accept_if(X, input, ignore)
-#   define Many(X) while (X) {}
-#   define Output(X) output.put(X);
-
-    Many(IgnoreIf(is_whitespace))
+    Many(IgnoreIf(is_whitespace) || ignore_comment())
     if (input.empty()) return;
 
     if (Ignore(U'{')) {
@@ -97,14 +97,24 @@ private:
       throw runtime_error(join("Invalid character '", input.front(), "'."));
     }
 
-#   undef Accept
-#   undef AcceptIf
-#   undef Ignore
-#   undef IgnoreIf
-#   undef Many
-#   undef Output
-
   }
+
+  bool ignore_comment() {
+    rx::ignorer ignore;
+    if (Ignore(U'#')) {
+      Many(IgnoreIf([](uint32_t rune) { return rune != U'\n'; }))
+      Ignore(U'\n');
+      return true;
+    }
+    return false;
+  }
+
+# undef Accept
+# undef AcceptIf
+# undef Ignore
+# undef IgnoreIf
+# undef Many
+# undef Output
 
   Token write_signed(const std::string& token, int base) {
     char* boundary;
