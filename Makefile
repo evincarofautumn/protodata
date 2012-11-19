@@ -1,6 +1,6 @@
 CXXFLAGS=-std=c++0x
 CPPFLAGS=-I. -Ivendor -MD -MP
-SRC=main.cpp
+SRC=main.cpp tokenizer.cpp
 
 .PHONY : all
 all : pd
