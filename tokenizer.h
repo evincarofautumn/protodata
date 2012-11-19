@@ -6,6 +6,7 @@
 #include <stdexcept>
 
 #include <rx/ignorer.h>
+#include <rx/output_splitter.h>
 #include <rx/utf8_output_encoder.h>
 
 #include <Token.h>
@@ -54,18 +55,16 @@ private:
     using namespace rx;
     using namespace std;
 
+    vector<uint32_t> raw;
     string token;
     ignorer ignore;
-    auto append(utf8_output_encoder(output_iterator(back_inserter(token))));
+    auto append = output_splitter(output_iterator(back_inserter(raw)),
+      utf8_output_encoder(output_iterator(back_inserter(token))));
 
     Many(IgnoreIf(is_whitespace) || ignore_comment());
     if (input.empty()) return;
 
-    if (Ignore(U'{')) {
-      Output(Token::push());
-    } else if (Ignore(U'}')) {
-      Output(Token::pop());
-    } else if (Ignore(U'0')) {
+    if (Ignore(U'0')) {
       if (Ignore(U'b')) {
         Many(AcceptIf(is_binary) || Ignore(U'_'));
         Output(write_signed(token, 2));
@@ -90,9 +89,18 @@ private:
       } else {
         Output(write_signed(token, 10));
       }
+    } else if (Ignore(U'"')) {
+      Many(AcceptIf([](uint32_t rune) { return rune != U'"'; }));
+      Ignore(U'"');
+      for (auto rune : raw)
+        Output(Token::write(uint64_t(rune)));
     } else if (AcceptIf(is_alphabetic)) {
       Many(AcceptIf(is_alphanumeric));
       throw runtime_error(join("Unknown keyword: \"", token, "\"."));
+    } else if (Ignore(U'{')) {
+      Output(Token::push());
+    } else if (Ignore(U'}')) {
+      Output(Token::pop());
     } else {
       string message("Invalid character: '");
       utf8::append(input.front(), back_inserter(message));
