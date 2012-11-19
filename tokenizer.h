@@ -45,8 +45,8 @@ private:
 # define AcceptIf(X) accept_if(X, input, append)
 # define Ignore(X) accept(X, input, ignore)
 # define IgnoreIf(X) accept_if(X, input, ignore)
-# define Many(X) while (X) {}
-# define Output(X) output.put(X);
+# define Many(X) while (X)
+# define Output(X) output.put(X)
 
   template<class O>
   void advance(O output) {
@@ -58,40 +58,40 @@ private:
     ignorer ignore;
     auto append(utf8_output_encoder(output_iterator(back_inserter(token))));
 
-    Many(IgnoreIf(is_whitespace) || ignore_comment())
+    Many(IgnoreIf(is_whitespace) || ignore_comment());
     if (input.empty()) return;
 
     if (Ignore(U'{')) {
-      Output(Token::push())
+      Output(Token::push());
     } else if (Ignore(U'}')) {
-      Output(Token::pop())
+      Output(Token::pop());
     } else if (Ignore(U'0')) {
       if (Ignore(U'b')) {
-        Many(AcceptIf(is_binary) || Ignore(U'_'))
-        Output(write_signed(token, 2))
+        Many(AcceptIf(is_binary) || Ignore(U'_'));
+        Output(write_signed(token, 2));
       } else if (Ignore(U'o')) {
-        Many(AcceptIf(is_octal) || Ignore(U'_'))
-        Output(write_signed(token, 8))
+        Many(AcceptIf(is_octal) || Ignore(U'_'));
+        Output(write_signed(token, 8));
       } else if (Ignore(U'x')) {
-        Many(AcceptIf(is_hexadecimal) || Ignore(U'_'))
-        Output(write_signed(token, 16))
+        Many(AcceptIf(is_hexadecimal) || Ignore(U'_'));
+        Output(write_signed(token, 16));
       } else if (Accept(U'.')) {
-        Many(AcceptIf(is_decimal) || Ignore(U'_'))
-        Output(write_double(token))
+        Many(AcceptIf(is_decimal) || Ignore(U'_'));
+        Output(write_double(token));
       } else {
-        Many(AcceptIf(is_decimal) || Ignore(U'_'))
-        Output(write_signed(token, 10))
+        Many(AcceptIf(is_decimal) || Ignore(U'_'));
+        Output(write_signed(token, 10));
       }
     } else if (AcceptIf(is_decimal)) {
-      Many(AcceptIf(is_decimal) || Ignore(U'_'))
+      Many(AcceptIf(is_decimal) || Ignore(U'_'));
       if (Accept(U'.')) {
-        Many(AcceptIf(is_decimal) || Ignore(U'_'))
-        Output(write_double(token))
+        Many(AcceptIf(is_decimal) || Ignore(U'_'));
+        Output(write_double(token));
       } else {
-        Output(write_signed(token, 10))
+        Output(write_signed(token, 10));
       }
     } else if (AcceptIf(is_alphabetic)) {
-      Many(AcceptIf(is_alphanumeric))
+      Many(AcceptIf(is_alphanumeric));
       throw runtime_error(join("Unknown keyword: \"", token, "\"."));
     } else {
       string message("Invalid character: '");
@@ -105,7 +105,7 @@ private:
   bool ignore_comment() {
     rx::ignorer ignore;
     if (Ignore(U'#')) {
-      Many(IgnoreIf([](uint32_t rune) { return rune != U'\n'; }))
+      Many(IgnoreIf([](uint32_t rune) { return rune != U'\n'; }));
       Ignore(U'\n');
       return true;
     }
