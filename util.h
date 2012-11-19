@@ -3,7 +3,7 @@
 
 #include <sstream>
 
-std::string join(std::ostringstream& stream) {
+inline std::string join(std::ostringstream& stream) {
   return stream.str();
 }
 
