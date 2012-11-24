@@ -52,6 +52,7 @@ public:
       break;
     }
     stream.copyfmt(state);
+    return stream;
   }
 private:
   enum Type {
