@@ -68,15 +68,6 @@ Term write_double(const std::string& token) {
   return Term::write(value);
 }
 
-Term write_signed(const std::string& token, int base) {
-  char* boundary;
-  const auto value = std::strtoll(token.c_str(), &boundary, base);
-  if (boundary != token.c_str() + token.size())
-    throw std::runtime_error(join("Invalid base-", base,
-      " signed integer literal: \"", token, "\""));
-  return Term::write(int64_t(value));
-}
-
 Term write_integer(const std::string& token, int base) {
   const bool has_sign = token[0] == '-' || token[0] == '+';
   char* boundary;
