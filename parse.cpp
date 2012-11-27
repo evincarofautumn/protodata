@@ -12,7 +12,9 @@ Term write_double_term(const std::string&);
 Term write_integer_term(const std::string&, int);
 
 template<class I, class O>
-bool accept(uint32_t rune, I& input, O output) {
+bool accept(uint32_t rune, I& input, I end, O output) {
+  if (input == end)
+    return false;
   if (*input == rune) {
     utf8::append(*input, output);
     ++input;
@@ -22,7 +24,9 @@ bool accept(uint32_t rune, I& input, O output) {
 }
 
 template<class I>
-bool accept(uint32_t rune, I& input) {
+bool accept(uint32_t rune, I& input, I end) {
+  if (input == end)
+    return false;
   if (*input == rune) {
     ++input;
     return true;
@@ -31,7 +35,9 @@ bool accept(uint32_t rune, I& input) {
 }
 
 template<class P, class I, class O>
-bool accept_if(P predicate, I& input, O output) {
+bool accept_if(P predicate, I& input, I end, O output) {
+  if (input == end)
+    return false;
   if (predicate(*input)) {
     utf8::append(*input++, output);
     return true;
@@ -40,7 +46,9 @@ bool accept_if(P predicate, I& input, O output) {
 }
 
 template<class P, class I>
-bool accept_if(P predicate, I& input) {
+bool accept_if(P predicate, I& input, I end) {
+  if (input == end)
+    return false;
   if (predicate(*input)) {
     ++input;
     return true;
@@ -99,43 +107,45 @@ std::vector<Term> parse(const std::vector<uint32_t>& runes) {
   std::vector<Term> result;
   std::string token;
   auto append = std::back_inserter(token);
-  auto here = runes.begin();
-  while (here != runes.end()) {
+  auto here = runes.begin(), end = runes.end();
+  while (true) {
     switch (state) {
     case NORMAL:
       token.clear();
-      if (accept_if(is_whitespace, here)
-        || transition(state, STRING, U'"', here)
-        || transition_if(state, IDENTIFIER, is_alphabetic, here, append)
-        || transition(state, COMMENT, U'#', here))
+      if (accept_if(is_whitespace, here, end)
+        || transition(state, STRING, U'"', here, end)
+        || transition_if(state, IDENTIFIER, is_alphabetic, here, end, append)
+        || transition(state, COMMENT, U'#', here, end)
+        || transition(state, NUMBER, U'+', here, end, append)
+        || transition(state, NUMBER, U'-', here, end, append))
         break;
-      if (accept(U'{', here)) {
+      if (accept(U'{', here, end)) {
         result.push_back(Term::push());
-      } else if (accept(U'}', here)) {
+      } else if (accept(U'}', here, end)) {
         result.push_back(Term::pop());
       } else {
         state = NUMBER;
       }
       break;
     case NUMBER:
-      if (accept(U'+', here, append)
-        || accept(U'-', here, append)
-        || transition(state, ZERO, U'0', here, append)
-        || transition_if(state, DECIMAL, is_decimal, here, append))
+      if (transition(state, ZERO, U'0', here, end, append)
+        || transition_if(state, DECIMAL, is_decimal, here, end, append))
         break;
       {
+        if (here == end) goto end;
         std::string message("Invalid character: '");
         utf8::append(*here, std::back_inserter(message));
         message += "'.";
         throw std::runtime_error(message);
       }
     case COMMENT:
-      if (transition(state, NORMAL, U'\n', here))
+      if (transition(state, NORMAL, U'\n', here, end))
         break;
+      if (here == end) goto end;
       ++here;
       break;
     case IDENTIFIER:
-      if (accept_if(is_alphanumeric, here, append))
+      if (accept_if(is_alphanumeric, here, end, append))
         break;
       {
         const auto command = commands.find(token);
@@ -148,53 +158,55 @@ std::vector<Term> parse(const std::vector<uint32_t>& runes) {
       state = NORMAL;
       break;
     case ZERO:
-      if (transition(state, BINARY, U'b', here)
-        || transition(state, OCTAL, U'o', here)
-        || transition(state, HEXADECIMAL, U'x', here)
-        || transition(state, FLOAT, U'.', here, append))
+      if (transition(state, BINARY, U'b', here, end)
+        || transition(state, OCTAL, U'o', here, end)
+        || transition(state, HEXADECIMAL, U'x', here, end)
+        || transition(state, FLOAT, U'.', here, end, append))
         break;
       state = DECIMAL;
       break;
     case BINARY:
-      if (accept_if(is_binary, here, append)
-        || (accept(U'_', here)))
+      if (accept_if(is_binary, here, end, append)
+        || (accept(U'_', here, end)))
         break;
       result.push_back(write_integer_term(token, 2));
       state = NORMAL;
       break;
     case OCTAL:
-      if (accept_if(is_octal, here, append)
-        || accept(U'_', here))
+      if (accept_if(is_octal, here, end, append)
+        || accept(U'_', here, end))
         break;
       result.push_back(write_integer_term(token, 8));
       state = NORMAL;
       break;
     case DECIMAL:
-      if (accept_if(is_decimal, here, append)
-        || accept(U'_', here)
-        || transition(state, FLOAT, U'.', here, append))
+      if (accept_if(is_decimal, here, end, append)
+        || accept(U'_', here, end)
+        || transition(state, FLOAT, U'.', here, end, append))
         break;
       result.push_back(write_integer_term(token, 10));
       state = NORMAL;
       break;
     case HEXADECIMAL:
-      if (accept_if(is_hexadecimal, here, append)
-        || accept(U'_', here))
+      if (accept_if(is_hexadecimal, here, end, append)
+        || accept(U'_', here, end))
         break;
       result.push_back(write_integer_term(token, 16));
       state = NORMAL;
       break;
     case FLOAT:
-      if (accept_if(is_decimal, here, append)
-        || accept(U'_', here))
+      if (accept_if(is_decimal, here, end, append)
+        || accept(U'_', here, end))
         break;
       result.push_back(write_double_term(token));
       state = NORMAL;
       break;
     case STRING:
-      if (transition(state, NORMAL, U'"', here)
-        || transition(state, ESCAPE, U'\\', here))
+      if (transition(state, NORMAL, U'"', here, end)
+        || transition(state, ESCAPE, U'\\', here, end))
         break;
+      if (here == end)
+        throw std::runtime_error("Unexpected end of file in string.");
       result.push_back(Term::write(Term::Unsigned(*here++)));
       break;
     case ESCAPE:
@@ -224,6 +236,7 @@ std::vector<Term> parse(const std::vector<uint32_t>& runes) {
       }
     }
   }
+  end:
   return result;
 }
 
