@@ -37,6 +37,11 @@ namespace utf8 {
     }
     return result;
   }
+  template<class u32_iterator>
+  u32_iterator append32(uint32_t rune, u32_iterator result) {
+    *result++ = rune;
+    return result;
+  }
 }
 
 template<class T>
