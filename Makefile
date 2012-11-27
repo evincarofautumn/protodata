@@ -1,6 +1,12 @@
 CPPFLAGS=-I. -Ivendor -MD -MP -Wall -Werror
 CXXFLAGS=-std=c++0x
-SRC=main.cpp Term.cpp
+SRC= \
+    Term.cpp \
+    interpret.cpp \
+    io.cpp \
+    main.cpp \
+    parse.cpp \
+    usage.cpp
 
 MAKEFLAGS+=--silent
 
