@@ -1,4 +1,4 @@
-CPPFLAGS=-I. -Ivendor -MD -MP -Wall -Werror
+CPPFLAGS=-I. -Ivendor -MD -MP -Wall -Werror -Wno-sign-compare
 CXXFLAGS=-std=c++0x
 SRC= \
     Term.cpp \
