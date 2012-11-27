@@ -157,6 +157,10 @@ std::vector<Term> parse(const std::vector<uint32_t>& runes) {
         ++here;
       } else if (*here == U'_') {
         ++here;
+      } else if (*here == U'.') {
+        utf8::append(*here, append);
+        ++here;
+        state = FLOAT;
       } else {
         result.push_back(write_integer_term(token, 10));
         state = NORMAL;
