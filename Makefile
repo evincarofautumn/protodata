@@ -11,14 +11,26 @@ SRC= \
 MAKEFLAGS+=--silent
 
 .PHONY : all
-all : pd test
+all : build test
 
 .PHONY : clean
-clean :
+clean : clean-pd clean-deps clean-test
+
+.PHONY : clean-pd
+clean-pd :
 	rm pd
-	rm *.d
 	rm *.o
+
+.PHONY : clean-deps
+clean-deps :
+	rm *.d
+
+.PHONY : clean-test
+clean-test :
 	rm test/*.actual
+
+.PHONY : Build
+build : pd
 
 pd : $(SRC:%.cpp=%.o)
 	$(CXX) -o $@ $^
