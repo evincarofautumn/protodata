@@ -1,11 +1,11 @@
 # Comment.
-0
+u64 0
 # Comment also.
 
 # No intervening statement.
 # No intervening whitespace.
 
         # Indented.
-0.5#Smushed into value.
+f64 0.5#Smushed into value.
 
 # Ending at EOF.
