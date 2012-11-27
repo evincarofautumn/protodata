@@ -74,6 +74,7 @@ std::vector<Term> parse(const std::vector<uint32_t>& runes) {
     case NUMBER:
       if (*here == U'+' || *here == U'-') {
         utf8::append(*here, append);
+        ++here;
       } else if (*here == U'0') {
         utf8::append(*here, append);
         ++here;
