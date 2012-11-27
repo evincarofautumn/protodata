@@ -29,6 +29,7 @@ int main(int argc, char** argv) try {
   interpret(parse(read(*input)), *output);
 } catch (const utf8::exception& exception) {
   std::cerr << "Failed to decode UTF-8: " << exception.what() << ".\n";
+  return 1;
 } catch (const std::exception& exception) {
   std::cerr << exception.what() << '\n';
   return 1;
