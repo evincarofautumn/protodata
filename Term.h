@@ -1,8 +1,7 @@
 #ifndef PROTODATA_TOKEN_H
 #define PROTODATA_TOKEN_H
 
-#include <iomanip>
-#include <iostream>
+#include <cstdint>
 
 class Term {
 public:
