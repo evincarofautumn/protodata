@@ -3,12 +3,12 @@
 
 #include <iosfwd>
 
-struct istream_deleter { void operator()(std::istream* p) const {
-  if (p != &std::cin) delete p;
-}};
+struct istream_deleter {
+  void operator()(std::istream*) const;
+};
 
-struct ostream_deleter { void operator()(std::ostream* p) const {
-  if (p != &std::cout) delete p;
-}};
+struct ostream_deleter {
+  void operator()(std::ostream* p) const;
+};
 
 #endif
