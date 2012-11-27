@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iostream>
 #include <iterator>
+#include <map>
 #include <memory>
 #include <stack>
 #include <stdexcept>
@@ -76,18 +77,29 @@ Term write_signed(const std::string& token, int base) {
   return Term::write(int64_t(value));
 }
 
-Term write_unsigned(const std::string& token, int base) {
+Term write_integer(const std::string& token, int base) {
+  const bool has_sign = token[0] == '-' || token[0] == '+';
   char* boundary;
-  const auto value = std::strtoull(token.c_str(), &boundary, base);
-  if (boundary != token.c_str() + token.size())
-    throw std::runtime_error(join("Invalid base-", base,
-      " unsigned integer literal: \"", token, "\""));
-  return Term::write(uint64_t(value));
+  const auto begin = token.c_str(), end = begin + token.size();
+  if (has_sign) {
+    Term::Signed value = std::strtoll(begin, &boundary, base);
+    if (boundary != end)
+      throw std::runtime_error(join("Invalid base-", base,
+        " signed integer literal: \"", token, "\""));
+    return Term::write(value);
+  } else {
+    Term::Unsigned value = std::strtoull(begin, &boundary, base);
+    if (boundary != end)
+      throw std::runtime_error(join("Invalid base-", base,
+        " unsigned integer literal: \"", token, "\""));
+    return Term::write(value);
+  }
 }
 
 std::vector<Term> parse(const std::vector<uint32_t>& runes) {
   enum {
     NORMAL,
+    NUMBER,
     COMMENT,
     IDENTIFIER,
     ZERO,
@@ -99,6 +111,21 @@ std::vector<Term> parse(const std::vector<uint32_t>& runes) {
     STRING,
     ESCAPE,
   } state = NORMAL;
+  const std::map<std::string, std::vector<Term>> commands {
+    { "u8",  { Term::INTEGER, Term::UNSIGNED, Term::WIDTH_8  } },
+    { "u16", { Term::INTEGER, Term::UNSIGNED, Term::WIDTH_16 } },
+    { "u32", { Term::INTEGER, Term::UNSIGNED, Term::WIDTH_32 } },
+    { "u64", { Term::INTEGER, Term::UNSIGNED, Term::WIDTH_64 } },
+    { "s8",  { Term::INTEGER, Term::SIGNED,   Term::WIDTH_8  } },
+    { "s16", { Term::INTEGER, Term::SIGNED,   Term::WIDTH_16 } },
+    { "s32", { Term::INTEGER, Term::SIGNED,   Term::WIDTH_32 } },
+    { "s64", { Term::INTEGER, Term::SIGNED,   Term::WIDTH_64 } },
+    { "f32", { Term::FLOAT, Term::WIDTH_32 } },
+    { "f64", { Term::FLOAT, Term::WIDTH_64 } },
+    { "utf8",  { Term::UNICODE, Term::WIDTH_8  } },
+    { "utf16", { Term::UNICODE, Term::WIDTH_16 } },
+    { "utf32", { Term::UNICODE, Term::WIDTH_32 } },
+  };
   std::vector<Term> result;
   std::string token;
   auto append = std::back_inserter(token);
@@ -109,14 +136,6 @@ std::vector<Term> parse(const std::vector<uint32_t>& runes) {
       token.clear();
       if (is_whitespace(*here)) {
         ++here;
-      } else if (*here == U'0') {
-        utf8::append(*here, append);
-        ++here;
-        state = ZERO;
-      } else if (is_decimal(*here)) {
-        utf8::append(*here, append);
-        ++here;
-        state = DECIMAL;
       } else if (*here == '"') {
         ++here;
         state = STRING;
@@ -133,6 +152,21 @@ std::vector<Term> parse(const std::vector<uint32_t>& runes) {
       } else if (*here == '}') {
         ++here;
         result.push_back(Term::pop());
+      } else {
+        state = NUMBER;
+      }
+      break;
+    case NUMBER:
+      if (*here == U'+' || *here == U'-') {
+        utf8::append(*here, append);
+      } else if (*here == U'0') {
+        utf8::append(*here, append);
+        ++here;
+        state = ZERO;
+      } else if (is_decimal(*here)) {
+        utf8::append(*here, append);
+        ++here;
+        state = DECIMAL;
       } else {
         std::string message("Invalid character: '");
         utf8::append(*here, std::back_inserter(message));
@@ -153,7 +187,12 @@ std::vector<Term> parse(const std::vector<uint32_t>& runes) {
         utf8::append(*here, append);
         ++here;
       } else {
-        std::cerr << "Unimplemented command: '" << token << "'.\n";
+        const auto command = commands.find(token);
+        if (command == commands.end())
+          throw std::runtime_error(join
+            ("Unimplemented command: '", token, "'.\n"));
+        result.insert(result.end(),
+          command->second.begin(), command->second.end());
         state = NORMAL;
       }
       break;
@@ -182,7 +221,7 @@ std::vector<Term> parse(const std::vector<uint32_t>& runes) {
       } else if (*here == U'_') {
         ++here;
       } else {
-        result.push_back(write_unsigned(token, 2));
+        result.push_back(write_integer(token, 2));
         state = NORMAL;
       }
       break;
@@ -193,7 +232,7 @@ std::vector<Term> parse(const std::vector<uint32_t>& runes) {
       } else if (*here == U'_') {
         ++here;
       } else {
-        result.push_back(write_unsigned(token, 8));
+        result.push_back(write_integer(token, 8));
         state = NORMAL;
       }
       break;
@@ -204,7 +243,7 @@ std::vector<Term> parse(const std::vector<uint32_t>& runes) {
       } else if (*here == U'_') {
         ++here;
       } else {
-        result.push_back(write_unsigned(token, 10));
+        result.push_back(write_integer(token, 10));
         state = NORMAL;
       }
       break;
@@ -215,7 +254,7 @@ std::vector<Term> parse(const std::vector<uint32_t>& runes) {
       } else if (*here == U'_') {
         ++here;
       } else {
-        result.push_back(write_unsigned(token, 16));
+        result.push_back(write_integer(token, 16));
         state = NORMAL;
       }
       break;
@@ -300,125 +339,179 @@ std::vector<Term> parse(const std::vector<uint32_t>& runes) {
 struct State {
   State()
     : width(sizeof(int) == 8 ? Term::WIDTH_64 : Term::WIDTH_32)
-    , endianness(Term::ENDIANNESS_NATIVE)
-    , signedness(Term::SIGNEDNESS_UNSIGNED)
-    , format(Term::FORMAT_INTEGER) {}
+    , endianness(Term::NATIVE)
+    , signedness(Term::UNSIGNED)
+    , format(Term::INTEGER) {}
   Term::Width width;
   Term::Endianness endianness;
   Term::Signedness signedness;
   Term::Format format;
 };
 
+template<class T>
+const char* serialize_cast(const T& x) {
+  return reinterpret_cast<const char*>(x);
+}
+
+namespace utf8 {
+  template<class u16_iterator>
+  u16_iterator append16(uint32_t rune, u16_iterator result) {
+    if (rune > 0xffff) {
+      *result++ = static_cast<uint16_t>((rune >> 10) + internal::LEAD_OFFSET);
+      *result++ = static_cast<uint16_t>
+        ((rune & 0x3ff) + internal::TRAIL_SURROGATE_MIN);
+    } else {
+      *result++ = static_cast<uint16_t>(rune);
+    }
+    return result;
+  }
+}
+
+template<class T>
+void write_value(const State& state, const T& input, std::ostream& output) {
+  switch (state.format) {
+  case Term::INTEGER:
+    switch (state.signedness) {
+    case Term::UNSIGNED:
+      switch (state.width) {
+      case Term::WIDTH_8:
+        {
+          const uint8_t buffer = input;
+          output.write(serialize_cast(&buffer), sizeof buffer);
+        }
+        break;
+      case Term::WIDTH_16:
+        {
+          const uint16_t buffer = input;
+          output.write(serialize_cast(&buffer), sizeof buffer);
+        }
+        break;
+      case Term::WIDTH_32:
+        {
+          const uint32_t buffer = input;
+          output.write(serialize_cast(&buffer), sizeof buffer);
+        }
+        break;
+      case Term::WIDTH_64:
+        {
+          const uint64_t buffer = input;
+          output.write(serialize_cast(&buffer), sizeof buffer);
+        }
+        break;
+      }
+      break;
+    case Term::SIGNED:
+      switch (state.width) {
+      case Term::WIDTH_8:
+        {
+          const int8_t buffer = input;
+          output.write(serialize_cast(&buffer), sizeof buffer);
+        }
+        break;
+      case Term::WIDTH_16:
+        {
+          const int16_t buffer = input;
+          output.write(serialize_cast(&buffer), sizeof buffer);
+        }
+        break;
+      case Term::WIDTH_32:
+        {
+          const int32_t buffer = input;
+          output.write(serialize_cast(&buffer), sizeof buffer);
+        }
+        break;
+      case Term::WIDTH_64:
+        {
+          const int64_t buffer = input;
+          output.write(serialize_cast(&buffer), sizeof buffer);
+        }
+        break;
+      }
+      break;
+    }
+    break;
+  case Term::FLOAT:
+    switch (state.width) {
+    case Term::WIDTH_32:
+      {
+        const float buffer = input;
+        output.write(serialize_cast(&buffer), sizeof buffer);
+      }
+      break;
+    case Term::WIDTH_64:
+      {
+        const double buffer = input;
+        output.write(serialize_cast(&buffer), sizeof buffer);
+      }
+      break;
+    default:
+      IMPOSSIBLE("invalid floating-point width");
+    }
+    break;
+  case Term::UNICODE:
+    switch (state.width) {
+    case Term::WIDTH_8:
+      {
+        const uint32_t rune = input;
+        std::vector<uint8_t> buffer;
+        utf8::append(rune, std::back_inserter(buffer));
+        output.write
+          (serialize_cast(&buffer[0]), buffer.size() * sizeof buffer.front());
+      }
+      break;
+    case Term::WIDTH_16:
+      {
+        const uint32_t rune = input;
+        std::vector<uint16_t> buffer;
+        utf8::append16(rune, std::back_inserter(buffer));
+        output.write
+          (serialize_cast(&buffer[0]), buffer.size() * sizeof buffer.front());
+      }
+      break;
+    case Term::WIDTH_32:
+      {
+        const uint32_t buffer = input;
+        output.write(serialize_cast(&buffer), sizeof buffer);
+      }
+      break;
+    default:
+      IMPOSSIBLE("invalid Unicode width");
+    }
+  }
+}
+
 void interpret(const std::vector<Term>& terms, std::ostream& output) {
-  std::vector<char> buffer;
   std::stack<State> state;
   state.push(State());
   for (auto term : terms) {
     switch (term.type) {
-    case Term::TYPE_NOOP:
+    case Term::NOOP:
       break;
-    case Term::TYPE_PUSH:
+    case Term::PUSH:
       state.push(state.top());
       break;
-    case Term::TYPE_POP:
+    case Term::POP:
       state.pop();
       break;
-    case Term::TYPE_WRITE_SIGNED:
-      switch (state.top().format) {
-      case Term::FORMAT_INTEGER:
-        switch (state.top().signedness) {
-        case Term::SIGNEDNESS_UNSIGNED:
-          switch (state.top().width) {
-          case Term::WIDTH_8:
-            {
-              const uint8_t value = term.value.as_signed;
-              output.write
-                (reinterpret_cast<const char*>(&value), sizeof(value));
-            }
-            break;
-          case Term::WIDTH_16:
-            {
-              const uint16_t value = term.value.as_signed;
-              output.write
-                (reinterpret_cast<const char*>(&value), sizeof(value));
-            }
-            break;
-          case Term::WIDTH_32:
-            {
-              const uint32_t value = term.value.as_signed;
-              output.write
-                (reinterpret_cast<const char*>(&value), sizeof(value));
-            }
-            break;
-          case Term::WIDTH_64:
-            {
-              const uint64_t value = term.value.as_signed;
-              output.write
-                (reinterpret_cast<const char*>(&value), sizeof(value));
-            }
-            break;
-          }
-          break;
-        case Term::SIGNEDNESS_SIGNED:
-          switch (state.top().width) {
-          case Term::WIDTH_8:
-            {
-              const int8_t value = term.value.as_signed;
-              output.write
-                (reinterpret_cast<const char*>(&value), sizeof(value));
-            }
-            break;
-          case Term::WIDTH_16:
-            {
-              const int16_t value = term.value.as_signed;
-              output.write
-                (reinterpret_cast<const char*>(&value), sizeof(value));
-            }
-            break;
-          case Term::WIDTH_32:
-            {
-              const int32_t value = term.value.as_signed;
-              output.write
-                (reinterpret_cast<const char*>(&value), sizeof(value));
-            }
-            break;
-          case Term::WIDTH_64:
-            {
-              const int64_t value = term.value.as_signed;
-              output.write
-                (reinterpret_cast<const char*>(&value), sizeof(value));
-            }
-            break;
-          }
-          break;
-        }
-        break;
-      case Term::FORMAT_FLOAT:
-        throw std::runtime_error("Unimplemented: floating-point formats.");
-        break;
-      case Term::FORMAT_UNICODE:
-        throw std::runtime_error("Unimplemented: Unicode formats.");
-        break;
-      }
-      {
-        const auto begin = reinterpret_cast<const char*>(&term.value.as_signed);
-        buffer.assign(begin, begin + sizeof(Term::Signed));
-      }
+    case Term::WRITE_SIGNED:
+      write_value(state.top(), term.value.as_signed, output);
       break;
-    case Term::TYPE_WRITE_UNSIGNED:
-      throw std::runtime_error("Unimplemented: unsigned values.");
+    case Term::WRITE_UNSIGNED:
+      write_value(state.top(), term.value.as_unsigned, output);
       break;
-    case Term::TYPE_WRITE_DOUBLE:
-      throw std::runtime_error("Unimplemented: floating-point values.");
+    case Term::WRITE_DOUBLE:
+      throw std::runtime_error("Unimplemented: floating-point value.");
+    case Term::SET_ENDIANNESS:
+      state.top().endianness = term.value.as_endianness;
       break;
-    case Term::TYPE_SET_WIDTH:
+    case Term::SET_SIGNEDNESS:
+      state.top().signedness = term.value.as_signedness;
+      break;
+    case Term::SET_WIDTH:
       state.top().width = term.value.as_width;
       break;
-    case Term::TYPE_SET_FORMAT:
+    case Term::SET_FORMAT:
       state.top().format = term.value.as_format;
-      break;
-    case Term::TYPE_SET_ENDIANNESS:
-      state.top().endianness = term.value.as_endianness;
       break;
     }
   }
