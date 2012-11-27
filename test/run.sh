@@ -33,14 +33,14 @@ function run_test {
     exit 1
   fi
 
-  diff -q "$actual_out" "$expect_out"
+  diff -q "$expect_out" "$actual_out"
   if [ "$?" != 0 ]; then
     echo "Test '$test_name' FAILED." >&2
     echo "Positive test output does not match expected." >&2
     exit 1
   fi
 
-  diff -u "$actual_err" "$expect_err"
+  diff -u "$expect_err" "$actual_err"
   if [ "$?" != 0 ]; then
     echo "Test '$test_name' FAILED." >&2
     echo "Negative test output does not match expected." >&2
