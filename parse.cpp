@@ -11,6 +11,61 @@
 Term write_double_term(const std::string&);
 Term write_integer_term(const std::string&, int);
 
+template<class I, class O>
+bool accept(uint32_t rune, I& input, O output) {
+  if (*input == rune) {
+    utf8::append(*input, output);
+    ++input;
+    return true;
+  }
+  return false;
+}
+
+template<class I>
+bool accept(uint32_t rune, I& input) {
+  if (*input == rune) {
+    ++input;
+    return true;
+  }
+  return false;
+}
+
+template<class P, class I, class O>
+bool accept_if(P predicate, I& input, O output) {
+  if (predicate(*input)) {
+    utf8::append(*input++, output);
+    return true;
+  }
+  return false;
+}
+
+template<class P, class I>
+bool accept_if(P predicate, I& input) {
+  if (predicate(*input)) {
+    ++input;
+    return true;
+  }
+  return false;
+}
+
+template<class T, class... Args>
+bool transition(T& state, const T& target, Args&&... args) {
+  if (accept(std::forward<Args>(args)...)) {
+    state = target;
+    return true;
+  }
+  return false;
+}
+
+template<class T, class... Args>
+bool transition_if(T& state, const T& target, Args&&... args) {
+  if (accept_if(std::forward<Args>(args)...)) {
+    state = target;
+    return true;
+  }
+  return false;
+}
+
 std::vector<Term> parse(const std::vector<uint32_t>& runes) {
   enum {
     NORMAL,
@@ -49,207 +104,123 @@ std::vector<Term> parse(const std::vector<uint32_t>& runes) {
     switch (state) {
     case NORMAL:
       token.clear();
-      if (is_whitespace(*here)) {
-        ++here;
-      } else if (*here == '"') {
-        ++here;
-        state = STRING;
-      } else if (is_alphabetic(*here)) {
-        utf8::append(*here, append);
-        ++here;
-        state = IDENTIFIER;
-      } else if (*here == '#') {
-        ++here;
-        state = COMMENT;
-      } else if (*here == '{') {
-        ++here;
+      if (accept_if(is_whitespace, here)
+        || transition(state, STRING, U'"', here)
+        || transition_if(state, IDENTIFIER, is_alphabetic, here, append)
+        || transition(state, COMMENT, U'#', here))
+        break;
+      if (accept(U'{', here)) {
         result.push_back(Term::push());
-      } else if (*here == '}') {
-        ++here;
+      } else if (accept(U'}', here)) {
         result.push_back(Term::pop());
       } else {
         state = NUMBER;
       }
       break;
     case NUMBER:
-      if (*here == U'+' || *here == U'-') {
-        utf8::append(*here, append);
-        ++here;
-      } else if (*here == U'0') {
-        utf8::append(*here, append);
-        ++here;
-        state = ZERO;
-      } else if (is_decimal(*here)) {
-        utf8::append(*here, append);
-        ++here;
-        state = DECIMAL;
-      } else {
+      if (accept(U'+', here, append)
+        || accept(U'-', here, append)
+        || transition(state, ZERO, U'0', here, append)
+        || transition_if(state, DECIMAL, is_decimal, here, append))
+        break;
+      {
         std::string message("Invalid character: '");
         utf8::append(*here, std::back_inserter(message));
         message += "'.";
         throw std::runtime_error(message);
       }
-      break;
     case COMMENT:
-      if (*here == U'\n') {
-        ++here;
-        state = NORMAL;
-      } else {
-        ++here;
-      }
+      if (transition(state, NORMAL, U'\n', here))
+        break;
+      ++here;
       break;
     case IDENTIFIER:
-      if (is_alphanumeric(*here) || *here == U'_') {
-        utf8::append(*here, append);
-        ++here;
-      } else {
+      if (accept_if(is_alphanumeric, here, append))
+        break;
+      {
         const auto command = commands.find(token);
         if (command == commands.end())
           throw std::runtime_error(join
             ("Unimplemented command: '", token, "'.\n"));
         result.insert(result.end(),
           command->second.begin(), command->second.end());
-        state = NORMAL;
       }
+      state = NORMAL;
       break;
     case ZERO:
-      if (*here == U'b') {
-        ++here;
-        state = BINARY;
-      } else if (*here == U'o') {
-        ++here;
-        state = OCTAL;
-      } else if (*here == U'x') {
-        ++here;
-        state = HEXADECIMAL;
-      } else if (*here == U'.') {
-        utf8::append(*here, append);
-        ++here;
-        state = FLOAT;
-      } else {
-        state = DECIMAL;
-      }
+      if (transition(state, BINARY, U'b', here)
+        || transition(state, OCTAL, U'o', here)
+        || transition(state, HEXADECIMAL, U'x', here)
+        || transition(state, FLOAT, U'.', here, append))
+        break;
+      state = DECIMAL;
       break;
     case BINARY:
-      if (is_binary(*here)) {
-        utf8::append(*here, append);
-        ++here;
-      } else if (*here == U'_') {
-        ++here;
-      } else {
-        result.push_back(write_integer_term(token, 2));
-        state = NORMAL;
-      }
+      if (accept_if(is_binary, here, append)
+        || (accept(U'_', here)))
+        break;
+      result.push_back(write_integer_term(token, 2));
+      state = NORMAL;
       break;
     case OCTAL:
-      if (is_octal(*here)) {
-        utf8::append(*here, append);
-        ++here;
-      } else if (*here == U'_') {
-        ++here;
-      } else {
-        result.push_back(write_integer_term(token, 8));
-        state = NORMAL;
-      }
+      if (accept_if(is_octal, here, append)
+        || accept(U'_', here))
+        break;
+      result.push_back(write_integer_term(token, 8));
+      state = NORMAL;
       break;
     case DECIMAL:
-      if (is_decimal(*here)) {
-        utf8::append(*here, append);
-        ++here;
-      } else if (*here == U'_') {
-        ++here;
-      } else if (*here == U'.') {
-        utf8::append(*here, append);
-        ++here;
-        state = FLOAT;
-      } else {
-        result.push_back(write_integer_term(token, 10));
-        state = NORMAL;
-      }
+      if (accept_if(is_decimal, here, append)
+        || accept(U'_', here)
+        || transition(state, FLOAT, U'.', here, append))
+        break;
+      result.push_back(write_integer_term(token, 10));
+      state = NORMAL;
       break;
     case HEXADECIMAL:
-      if (is_hexadecimal(*here)) {
-        utf8::append(*here, append);
-        ++here;
-      } else if (*here == U'_') {
-        ++here;
-      } else {
-        result.push_back(write_integer_term(token, 16));
-        state = NORMAL;
-      }
+      if (accept_if(is_hexadecimal, here, append)
+        || accept(U'_', here))
+        break;
+      result.push_back(write_integer_term(token, 16));
+      state = NORMAL;
       break;
     case FLOAT:
-      if (is_decimal(*here)) {
-        utf8::append(*here, append);
-        ++here;
-      } else if (*here == U'_') {
-        ++here;
-      } else {
-        result.push_back(write_double_term(token));
-        state = NORMAL;
-      }
+      if (accept_if(is_decimal, here, append)
+        || accept(U'_', here))
+        break;
+      result.push_back(write_double_term(token));
+      state = NORMAL;
       break;
     case STRING:
-      if (*here == U'"') {
-        ++here;
-        state = NORMAL;
-      } else if (*here == U'\\') {
-        ++here;
-        state = ESCAPE;
-      } else {
-        result.push_back(Term::write(Term::Unsigned(*here)));
-        ++here;
-      }
+      if (transition(state, NORMAL, U'"', here)
+        || transition(state, ESCAPE, U'\\', here))
+        break;
+      result.push_back(Term::write(Term::Unsigned(*here++)));
       break;
     case ESCAPE:
-      switch (*here) {
-      case U'a':
-        result.push_back(Term::write(Term::Unsigned(U'\a')));
-        ++here;
-        break;
-      case U'b':
-        result.push_back(Term::write(Term::Unsigned(U'\b')));
-        ++here;
-        break;
-      case U'e':
-        result.push_back(Term::write(Term::Unsigned(U'\e')));
-        ++here;
-        break;
-      case U'f':
-        result.push_back(Term::write(Term::Unsigned(U'\f')));
-        ++here;
-        break;
-      case U'n':
-        result.push_back(Term::write(Term::Unsigned(U'\n')));
-        ++here;
-        break;
-      case U'r':
-        result.push_back(Term::write(Term::Unsigned(U'\r')));
-        ++here;
-        break;
-      case U't':
-        result.push_back(Term::write(Term::Unsigned(U'\t')));
-        ++here;
-        break;
-      case U'v':
-        result.push_back(Term::write(Term::Unsigned(U'\v')));
-        ++here;
-        break;
-      case U'\\':
-        result.push_back(Term::write(Term::Unsigned(U'\\')));
-        ++here;
-        break;
-      case U'"':
-        result.push_back(Term::write(Term::Unsigned(U'"')));
-        ++here;
-        break;
-      default:
-        {
-          std::string message("Invalid escape character: '");
-          utf8::append(*here, std::back_inserter(message));
-          message += "'.";
-          throw std::runtime_error(message);
+      {
+        Term::Unsigned value = 0;
+        switch (*here) {
+        case U'"': value = U'"'; break;
+        case U'a': value = U'\a'; break;
+        case U'b': value = U'\b'; break;
+        case U'e': value = U'\e'; break;
+        case U'f': value = U'\f'; break;
+        case U'n': value = U'\n'; break;
+        case U'r': value = U'\r'; break;
+        case U't': value = U'\t'; break;
+        case U'v': value = U'\v'; break;
+        case U'\\': value = U'\\'; break;
+        default:
+          {
+            std::string message("Invalid escape character: '");
+            utf8::append(*here, std::back_inserter(message));
+            message += "'.";
+            throw std::runtime_error(message);
+          }
         }
+        result.push_back(Term::write(value));
+        ++here;
       }
     }
   }
