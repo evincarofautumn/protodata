@@ -179,25 +179,25 @@ corresponding to Unicode code points. Strings are not
 null-terminated; an empty string is a no-op. The following
 common escapes are allowed:
 
- * `\\` ⇒ `\`
+ * `\\` ⇒ `\` = U+005C
 
- * `\"` ⇒ `"`
+ * `\"` ⇒ `"` = U+0022
 
- * `\a` ⇒ BEL
+ * `\a` ⇒ BEL = U+0007
 
- * `\b` ⇒ BS
+ * `\b` ⇒ BS = U+0008
 
- * `\e` ⇒ ESC
+ * `\e` ⇒ ESC = U+001B
 
- * `\f` ⇒ FF
+ * `\f` ⇒ FF = U+000C
 
- * `\n` ⇒ LF
+ * `\n` ⇒ LF = U+000A
 
- * `\r` ⇒ CR
+ * `\r` ⇒ CR = U+000D
 
- * `\t` ⇒ HT
+ * `\t` ⇒ HT = U+0009
 
- * `\v` ⇒ VT
+ * `\v` ⇒ VT = U+000B
 
 ## Commands
 
