@@ -5,6 +5,8 @@
 
 #include <deleters.h>
 
+#include <utf8.h>
+
 #include <cstring>
 #include <fstream>
 #include <iostream>
@@ -25,6 +27,8 @@ int main(int argc, char** argv) try {
     (argc < 2 || strcmp(argv[1], "-") == 0
       ? &cout : new ofstream(argv[1], ios::binary));
   interpret(parse(read(*input)), *output);
+} catch (const utf8::exception& exception) {
+  std::cerr << "Failed to decode UTF-8: " << exception.what() << ".\n";
 } catch (const std::exception& exception) {
   std::cerr << exception.what() << '\n';
   return 1;
