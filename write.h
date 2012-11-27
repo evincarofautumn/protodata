@@ -125,6 +125,33 @@ void write_integer(const State& state, const T& input, std::ostream& output) {
 }
 
 template<class T>
-void write_float(const State& state, const T& input, std::ostream& output) {}
+void write_float(const State& state, const T& input, std::ostream& output) {
+  switch (state.format) {
+  case Term::INTEGER:
+    throw std::runtime_error
+      ("Float values cannot be written in integer format.");
+  case Term::FLOAT:
+    switch (state.width) {
+    case Term::WIDTH_32:
+      {
+	const float buffer = input;
+	output.write(serialize_cast(&buffer), sizeof buffer);
+      }
+      break;
+    case Term::WIDTH_64:
+      {
+	const double buffer = input;
+	output.write(serialize_cast(&buffer), sizeof buffer);
+      }
+      break;
+    default:
+      IMPOSSIBLE("invalid float bit width");
+    }
+    break;
+  case Term::UNICODE:
+    throw std::runtime_error
+      ("Float values cannot be written in Unicode format.");
+  }
+}
 
 #endif
