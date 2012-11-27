@@ -25,7 +25,7 @@ function run_test {
     expect_err=/dev/null
   fi
 
-  $PD "$test_file" > "$actual_out" 2> "$actual_err"
+  $PD "$test_file" -o "$actual_out" 2> "$actual_err"
 
   if [ ! -e "$expect_out" ]; then
     echo "Test '$test_name' BROKEN." >&2

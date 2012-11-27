@@ -1,32 +1,26 @@
+#include <arguments.h>
 #include <interpret.h>
 #include <io.h>
 #include <parse.h>
-#include <usage.h>
 
-#include <deleters.h>
+#include <util.h>
 
 #include <utf8.h>
 
-#include <cstring>
-#include <fstream>
 #include <iostream>
-#include <memory>
 #include <stdexcept>
 
 int main(int argc, char** argv) try {
   using namespace std;
-  --argc, ++argv;
-  if (!(argc >= 0 && argc <= 2)) {
-    usage();
-    return 1;
+  auto parsed_arguments = parse_arguments(argc, argv);
+  const auto inputs = std::move(get<0>(parsed_arguments));
+  const auto output = std::move(get<1>(parsed_arguments));
+  vector<Term> terms;
+  for (const auto& input : inputs) {
+    const auto parsed = parse(read(*input));
+    terms.insert(terms.end(), parsed.begin(), parsed.end());
   }
-  unique_ptr<istream, istream_deleter> input
-    (argc < 1 || strcmp(argv[0], "-") == 0
-      ? &cin : new ifstream(argv[0]));
-  unique_ptr<ostream, ostream_deleter> output
-    (argc < 2 || strcmp(argv[1], "-") == 0
-      ? &cout : new ofstream(argv[1], ios::binary));
-  interpret(parse(read(*input)), *output);
+  interpret(terms, *output);
 } catch (const utf8::exception& exception) {
   std::cerr << "Failed to decode UTF-8: " << exception.what() << ".\n";
   return 1;
