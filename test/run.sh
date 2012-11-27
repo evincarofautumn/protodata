@@ -3,7 +3,7 @@
 here="$(cd "$(dirname "$0")" && pwd)"
 
 if [ "$#" -lt 1 ]; then
-  echo "Usage: run.sh /path/to/pd" >&2
+  echo "Usage: run.sh /path/to/pd [test-name]" >&2
   exit 1
 fi
 
@@ -65,6 +65,10 @@ if [ ! -e "$PD" ]; then
   exit 1
 fi
 
-find "$here" -maxdepth 1 -name '*.pd' | while read test_file; do
-  run_test "$test_file"
-done
+if [ $# -gt 0 ]; then
+  run_test "$here/$1.pd"
+else
+  find "$here" -maxdepth 1 -name '*.pd' | while read test_file; do
+    run_test "$test_file"
+  done
+fi
