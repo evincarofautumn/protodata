@@ -14,17 +14,15 @@
 
 // The following macros use 'input' and 'output' non-hygienically.
 
-#define WRITE_INTEGER(TYPE, NAME)                                   \
-  do {                                                              \
-    typedef std::numeric_limits<decltype(input)> input_limits;      \
-    typedef std::numeric_limits<TYPE> type_limits;                  \
-    if (input_limits::digits > type_limits::digits                  \
-      && (input < static_cast<decltype(input)>(type_limits::min())  \
-      || input > static_cast<decltype(input)>(type_limits::max()))) \
-      throw std::runtime_error                                      \
-        (join("Value exceeds range of ", (NAME), " integer."));     \
-    const TYPE buffer = input;                                      \
-    output.write(serialize_cast(&buffer), sizeof buffer);           \
+#define WRITE_INTEGER(TYPE, NAME)                                 \
+  do {                                                            \
+    typedef std::numeric_limits<decltype(input)> input_limits;    \
+    typedef std::numeric_limits<TYPE> type_limits;                \
+    if (input < type_limits::min() || input > type_limits::max()) \
+      throw std::runtime_error                                    \
+        (join("Value exceeds range of ", (NAME), " integer."));   \
+    const TYPE buffer = input;                                    \
+    output.write(serialize_cast(&buffer), sizeof buffer);         \
   } while (false)
 
 #define WRITE_FLOAT(TYPE)                                 \
