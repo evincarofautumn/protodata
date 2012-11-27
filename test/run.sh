@@ -60,6 +60,11 @@ function run_test {
 
 }
 
+if [ ! -e "$PD" ]; then
+  echo "Unable to run tests; missing 'pd' executable." >&2
+  exit 1
+fi
+
 find "$here" -maxdepth 1 -name '*.pd' | while read test_file; do
   run_test "$test_file"
 done
