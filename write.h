@@ -158,7 +158,7 @@ void write_float(const State& state, const T& input, std::ostream& output) {
 // required to work by the C++ standard.
 inline Term::Endianness platform_endianness() {
   const uint16_t value = 0x0001;
-  return reinterpret_cast<const char*>(&value)[0] == 0x01
+  return *reinterpret_cast<const char*>(&value) == 0x01
     ? Term::LITTLE : Term::BIG;
 }
 
