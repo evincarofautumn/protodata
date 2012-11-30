@@ -19,18 +19,22 @@ Term::Endianness platform_endianness();
 template<class T>
 void endian_copy(const T&, Term::Endianness, std::ostream&);
 
-// The following macros use 'input' and 'output' non-hygienically.
+template<class O, class I>
+void write_integer_value
+  (Term::Endianness endianness,
+  const I& input,
+  std::ostream& output,
+  const char* name) {
+  typedef std::numeric_limits<decltype(input)> input_limits;
+  typedef std::numeric_limits<O> type_limits;
+  if (input < type_limits::min() || input > type_limits::max())
+    throw std::runtime_error
+      (join("Value exceeds range of ", name, " integer."));
+  const O buffer(input);
+  endian_copy(buffer, endianness, output);
+}
 
-#define WRITE_INTEGER(TYPE, NAME)                                 \
-  do {                                                            \
-    typedef std::numeric_limits<decltype(input)> input_limits;    \
-    typedef std::numeric_limits<TYPE> type_limits;                \
-    if (input < type_limits::min() || input > type_limits::max()) \
-      throw std::runtime_error                                    \
-        (join("Value exceeds range of ", (NAME), " integer."));   \
-    const TYPE buffer = input;                                    \
-    endian_copy(buffer, state.endianness, output);                \
-  } while (false)
+// The following macros use 'input' and 'output' non-hygienically.
 
 #define WRITE_FLOAT(TYPE)                          \
   do {                                             \
@@ -54,18 +58,42 @@ void write_integer(const State& state, const T& input, std::ostream& output) {
     switch (state.signedness) {
     case Term::UNSIGNED:
       switch (state.width) {
-      case Term::WIDTH_8:  WRITE_INTEGER(uint8_t,  "unsigned 8-bit");  break;
-      case Term::WIDTH_16: WRITE_INTEGER(uint16_t, "unsigned 16-bit"); break;
-      case Term::WIDTH_32: WRITE_INTEGER(uint32_t, "unsigned 32-bit"); break;
-      case Term::WIDTH_64: WRITE_INTEGER(uint64_t, "unsigned 64-bit"); break;
+      case Term::WIDTH_8:
+        write_integer_value<uint8_t>
+          (state.endianness, input, output, "unsigned 8-bit");
+        break;
+      case Term::WIDTH_16:
+        write_integer_value<uint16_t>
+          (state.endianness, input, output, "unsigned 16-bit");
+        break;
+      case Term::WIDTH_32:
+        write_integer_value<uint32_t>
+          (state.endianness, input, output, "unsigned 32-bit");
+        break;
+      case Term::WIDTH_64:
+        write_integer_value<uint64_t>
+          (state.endianness, input, output, "unsigned 64-bit");
+        break;
       }
       break;
     case Term::SIGNED:
       switch (state.width) {
-      case Term::WIDTH_8:  WRITE_INTEGER(int8_t,  "signed 8-bit");  break;
-      case Term::WIDTH_16: WRITE_INTEGER(int16_t, "signed 16-bit"); break;
-      case Term::WIDTH_32: WRITE_INTEGER(int32_t, "signed 32-bit"); break;
-      case Term::WIDTH_64: WRITE_INTEGER(int64_t, "signed 64-bit"); break;
+      case Term::WIDTH_8:
+        write_integer_value<int8_t>
+          (state.endianness, input, output, "signed 8-bit");
+        break;
+      case Term::WIDTH_16:
+        write_integer_value<int16_t>
+          (state.endianness, input, output, "signed 16-bit");
+        break;
+      case Term::WIDTH_32:
+        write_integer_value<int32_t>
+          (state.endianness, input, output, "signed 32-bit");
+        break;
+      case Term::WIDTH_64:
+        write_integer_value<int64_t>
+          (state.endianness, input, output, "signed 64-bit");
+        break;
       }
       break;
     }
