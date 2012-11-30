@@ -103,6 +103,9 @@ std::vector<Term> parse(const std::vector<uint32_t>& runes) {
     { "utf8",  { Term::UNICODE, Term::WIDTH_8  } },
     { "utf16", { Term::UNICODE, Term::WIDTH_16 } },
     { "utf32", { Term::UNICODE, Term::WIDTH_32 } },
+    { "native", { Term::NATIVE } },
+    { "little", { Term::LITTLE } },
+    { "big",    { Term::BIG } },
   };
   std::vector<Term> result;
   std::string token;

@@ -7,10 +7,17 @@
 
 #include <utf8.h>
 
+#include <array>
+#include <algorithm>
 #include <cstdint>
 #include <limits>
 #include <ostream>
 #include <vector>
+
+Term::Endianness platform_endianness();
+
+template<class T>
+void endian_copy(const T&, Term::Endianness, std::ostream&);
 
 // The following macros use 'input' and 'output' non-hygienically.
 
@@ -22,23 +29,22 @@
       throw std::runtime_error                                    \
         (join("Value exceeds range of ", (NAME), " integer."));   \
     const TYPE buffer = input;                                    \
-    output.write(serialize_cast(&buffer), sizeof buffer);         \
+    endian_copy(buffer, state.endianness, output);                \
   } while (false)
 
-#define WRITE_FLOAT(TYPE)                                 \
-  do {                                                    \
-    const TYPE buffer = input;                            \
-    output.write(serialize_cast(&buffer), sizeof buffer); \
+#define WRITE_FLOAT(TYPE)                          \
+  do {                                             \
+    const TYPE buffer = input;                     \
+    endian_copy(buffer, state.endianness, output); \
   } while (false)
 
-#define WRITE_UNICODE(TYPE, ACTION)           \
-  do {                                        \
-    const uint32_t rune = input;              \
-    std::vector<TYPE> buffer;                 \
-    ACTION(rune, std::back_inserter(buffer)); \
-    output.write                              \
-      (serialize_cast(&buffer[0]),            \
-      buffer.size() * sizeof buffer.front()); \
+#define WRITE_UNICODE(TYPE, ACTION)                 \
+  do {                                              \
+    const uint32_t rune = input;                    \
+    std::vector<TYPE> buffer;                       \
+    ACTION(rune, std::back_inserter(buffer));       \
+    for (const auto value : buffer)                 \
+      endian_copy(value, state.endianness, output); \
   } while (false)
 
 template<class T>
@@ -78,7 +84,7 @@ void write_integer(const State& state, const T& input, std::ostream& output) {
     case Term::WIDTH_32:
       {
         const uint32_t buffer = input;
-        output.write(serialize_cast(&buffer), sizeof buffer);
+        endian_copy(buffer, state.endianness, output);
       }
       break;
     default:
@@ -109,5 +115,27 @@ void write_float(const State& state, const T& input, std::ostream& output) {
 #undef WRITE_INTEGER
 #undef WRITE_FLOAT
 #undef WRITE_UNICODE
+
+// Conversion via pointer to character type is, to my
+// knowledge, the only way of detecting endianness that is
+// required to work by the C++ standard.
+inline Term::Endianness platform_endianness() {
+  const uint16_t value = 0x0001;
+  return reinterpret_cast<const char*>(&value)[0] == 0x01
+    ? Term::LITTLE : Term::BIG;
+}
+
+template<class T>
+void endian_copy
+  (const T& value, Term::Endianness endianness, std::ostream& output) {
+  using namespace std;
+  array<char, sizeof(T)> buffer;
+  const auto begin = reinterpret_cast<const char*>(&value),
+    end = begin + sizeof(T);
+  copy(begin, end, buffer.begin());
+  if (endianness != Term::NATIVE && endianness != platform_endianness())
+    reverse(buffer.begin(), buffer.end());
+  output.write(buffer.begin(), sizeof(T));
+}
 
 #endif
