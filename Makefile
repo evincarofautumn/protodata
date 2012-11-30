@@ -1,4 +1,7 @@
-CPPFLAGS=-I. -Ivendor -MD -MP -Wall -Werror -Wno-sign-compare
+INCFLAGS=-I. -Ivendor
+DEPFLAGS=-MD -MP
+WARNFLAGS=$(addprefix -W,all error no-sign-compare)
+CPPFLAGS=$(INCFLAGS) $(DEPFLAGS) $(WARNFLAGS)
 CXXFLAGS=-std=c++0x
 SRC=$(wildcard *.cpp)
 
