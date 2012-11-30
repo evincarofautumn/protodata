@@ -27,7 +27,7 @@ clean-deps :
 clean-test :
 	rm -f test/*.actual
 
-.PHONY : Build
+.PHONY : build
 build : pd
 
 pd : $(SRC:%.cpp=%.o)
