@@ -49,14 +49,18 @@ void write_float_value
   endian_copy(buffer, endianness, output);
 }
 
-#define WRITE_UNICODE(TYPE, ACTION)                 \
-  do {                                              \
-    const uint32_t rune = input;                    \
-    std::vector<TYPE> buffer;                       \
-    ACTION(rune, std::back_inserter(buffer));       \
-    for (const auto value : buffer)                 \
-      endian_copy(value, state.endianness, output); \
-  } while (false)
+template<class O, class I>
+void write_unicode_value
+  (Term::Endianness endianness,
+  const I& input,
+  std::ostream& output,
+  O* (*append)(uint32_t, O*)) {
+  const uint32_t rune(input);
+  std::array<O, sizeof(uint32_t) / sizeof(O)> buffer;
+  const auto end(append(rune, &buffer[0]));
+  for (auto i = &buffer[0]; i != end; ++i)
+    endian_copy(*i, endianness, output);
+}
 
 template<class T>
 void write_integer(const State& state, const T& input, std::ostream& output) {
@@ -112,8 +116,12 @@ void write_integer(const State& state, const T& input, std::ostream& output) {
     break;
   case Term::UNICODE:
     switch (state.width) {
-    case Term::WIDTH_8:  WRITE_UNICODE(uint8_t,  utf8::append);   break;
-    case Term::WIDTH_16: WRITE_UNICODE(uint16_t, utf8::append16); break;
+    case Term::WIDTH_8:
+      write_unicode_value<uint8_t>(endianness, input, output, utf8::append);
+      break;
+    case Term::WIDTH_16:
+      write_unicode_value<uint16_t>(endianness, input, output, utf8::append16);
+      break;
     case Term::WIDTH_32:
       {
         const uint32_t buffer = input;
@@ -149,10 +157,6 @@ void write_float(const State& state, const T& input, std::ostream& output) {
       ("Float values cannot be written in Unicode format.");
   }
 }
-
-#undef WRITE_INTEGER
-#undef WRITE_FLOAT
-#undef WRITE_UNICODE
 
 // Conversion via pointer to character type is, to my
 // knowledge, the only way of detecting endianness that is
