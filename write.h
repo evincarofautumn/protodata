@@ -60,38 +60,39 @@ void write_float_value
 
 template<class T>
 void write_integer(const State& state, const T& input, std::ostream& output) {
+  const auto& endianness = state.endianness;
   switch (state.format) {
   case Term::INTEGER:
     switch (state.signedness) {
     case Term::UNSIGNED:
       switch (state.width) {
       case Term::WIDTH_8:
-        write_integer_value<uint8_t>(state.endianness, input, output);
+        write_integer_value<uint8_t>(endianness, input, output);
         break;
       case Term::WIDTH_16:
-        write_integer_value<uint16_t>(state.endianness, input, output);
+        write_integer_value<uint16_t>(endianness, input, output);
         break;
       case Term::WIDTH_32:
-        write_integer_value<uint32_t>(state.endianness, input, output);
+        write_integer_value<uint32_t>(endianness, input, output);
         break;
       case Term::WIDTH_64:
-        write_integer_value<uint64_t>(state.endianness, input, output);
+        write_integer_value<uint64_t>(endianness, input, output);
         break;
       }
       break;
     case Term::SIGNED:
       switch (state.width) {
       case Term::WIDTH_8:
-        write_integer_value<int8_t>(state.endianness, input, output);
+        write_integer_value<int8_t>(endianness, input, output);
         break;
       case Term::WIDTH_16:
-        write_integer_value<int16_t>(state.endianness, input, output);
+        write_integer_value<int16_t>(endianness, input, output);
         break;
       case Term::WIDTH_32:
-        write_integer_value<int32_t>(state.endianness, input, output);
+        write_integer_value<int32_t>(endianness, input, output);
         break;
       case Term::WIDTH_64:
-        write_integer_value<int64_t>(state.endianness, input, output);
+        write_integer_value<int64_t>(endianness, input, output);
         break;
       }
       break;
@@ -100,10 +101,10 @@ void write_integer(const State& state, const T& input, std::ostream& output) {
   case Term::FLOAT:
     switch (state.width) {
     case Term::WIDTH_32:
-      write_float_value<float>(state.endianness, input, output);
+      write_float_value<float>(endianness, input, output);
       break;
     case Term::WIDTH_64:
-      write_float_value<double>(state.endianness, input, output);
+      write_float_value<double>(endianness, input, output);
       break;
     default:
       IMPOSSIBLE("invalid float bit width");
@@ -116,7 +117,7 @@ void write_integer(const State& state, const T& input, std::ostream& output) {
     case Term::WIDTH_32:
       {
         const uint32_t buffer = input;
-        endian_copy(buffer, state.endianness, output);
+        endian_copy(buffer, endianness, output);
       }
       break;
     default:
