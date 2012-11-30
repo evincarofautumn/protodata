@@ -19,17 +19,21 @@ Term::Endianness platform_endianness();
 template<class T>
 void endian_copy(const T&, Term::Endianness, std::ostream&);
 
+template<class T>
+struct type_name {
+  static const char* value;
+};
+
 template<class O, class I>
 void write_integer_value
   (Term::Endianness endianness,
   const I& input,
-  std::ostream& output,
-  const char* name) {
+  std::ostream& output) {
   typedef std::numeric_limits<decltype(input)> input_limits;
   typedef std::numeric_limits<O> type_limits;
   if (input < type_limits::min() || input > type_limits::max())
     throw std::runtime_error
-      (join("Value exceeds range of ", name, " integer."));
+      (join("Value exceeds range of ", type_name<O>::value, " integer."));
   const O buffer(input);
   endian_copy(buffer, endianness, output);
 }
@@ -60,19 +64,19 @@ void write_integer(const State& state, const T& input, std::ostream& output) {
       switch (state.width) {
       case Term::WIDTH_8:
         write_integer_value<uint8_t>
-          (state.endianness, input, output, "unsigned 8-bit");
+          (state.endianness, input, output);
         break;
       case Term::WIDTH_16:
         write_integer_value<uint16_t>
-          (state.endianness, input, output, "unsigned 16-bit");
+          (state.endianness, input, output);
         break;
       case Term::WIDTH_32:
         write_integer_value<uint32_t>
-          (state.endianness, input, output, "unsigned 32-bit");
+          (state.endianness, input, output);
         break;
       case Term::WIDTH_64:
         write_integer_value<uint64_t>
-          (state.endianness, input, output, "unsigned 64-bit");
+          (state.endianness, input, output);
         break;
       }
       break;
@@ -80,19 +84,19 @@ void write_integer(const State& state, const T& input, std::ostream& output) {
       switch (state.width) {
       case Term::WIDTH_8:
         write_integer_value<int8_t>
-          (state.endianness, input, output, "signed 8-bit");
+          (state.endianness, input, output);
         break;
       case Term::WIDTH_16:
         write_integer_value<int16_t>
-          (state.endianness, input, output, "signed 16-bit");
+          (state.endianness, input, output);
         break;
       case Term::WIDTH_32:
         write_integer_value<int32_t>
-          (state.endianness, input, output, "signed 32-bit");
+          (state.endianness, input, output);
         break;
       case Term::WIDTH_64:
         write_integer_value<int64_t>
-          (state.endianness, input, output, "signed 64-bit");
+          (state.endianness, input, output);
         break;
       }
       break;
