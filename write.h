@@ -40,11 +40,14 @@ void write_integer_value
 
 // The following macros use 'input' and 'output' non-hygienically.
 
-#define WRITE_FLOAT(TYPE)                          \
-  do {                                             \
-    const TYPE buffer = input;                     \
-    endian_copy(buffer, state.endianness, output); \
-  } while (false)
+template<class O, class I>
+void write_float_value
+  (Term::Endianness endianness,
+  const I& input,
+  std::ostream& output) {
+  const O buffer(input);
+  endian_copy(buffer, endianness, output);
+}
 
 #define WRITE_UNICODE(TYPE, ACTION)                 \
   do {                                              \
@@ -96,9 +99,14 @@ void write_integer(const State& state, const T& input, std::ostream& output) {
     break;
   case Term::FLOAT:
     switch (state.width) {
-    case Term::WIDTH_32: WRITE_FLOAT(float);  break;
-    case Term::WIDTH_64: WRITE_FLOAT(double); break;
-    default: IMPOSSIBLE("invalid float bit width");
+    case Term::WIDTH_32:
+      write_float_value<float>(state.endianness, input, output);
+      break;
+    case Term::WIDTH_64:
+      write_float_value<double>(state.endianness, input, output);
+      break;
+    default:
+      IMPOSSIBLE("invalid float bit width");
     }
     break;
   case Term::UNICODE:
@@ -125,9 +133,14 @@ void write_float(const State& state, const T& input, std::ostream& output) {
       ("Float values cannot be written in integer format.");
   case Term::FLOAT:
     switch (state.width) {
-    case Term::WIDTH_32: WRITE_FLOAT(float); break;
-    case Term::WIDTH_64: WRITE_FLOAT(double); break;
-    default: IMPOSSIBLE("invalid float bit width");
+    case Term::WIDTH_32:
+      write_float_value<float>(state.endianness, input, output);
+      break;
+    case Term::WIDTH_64:
+      write_float_value<double>(state.endianness, input, output);
+      break;
+    default:
+      IMPOSSIBLE("invalid float bit width");
     }
     break;
   case Term::UNICODE:
