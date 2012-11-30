@@ -264,8 +264,7 @@ happens to be on the current platform.†
  * `big`
 
 The default endianness is `native`. The `s8`, `u8`, and
-`utf8` types ignore the current endianness, because they
-don't have any ends to dian.
+`utf8` types ignore the current endianness.
 
 ### Compiler State
 
