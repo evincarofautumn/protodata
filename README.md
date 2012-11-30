@@ -100,9 +100,7 @@ as long as the concatenated source is semantically valid.
 
 # The Language
 
-*Features marked with a dagger (†) are subject to
-change. Those marked with a double-dagger (‡) are not yet
-implemented.*
+*Features marked with a dagger (†) are subject to change.*
 
 A Protodata source file consists of a series of *values*
 and *commands*, delimited by whitespace and punctuated by
@@ -153,15 +151,16 @@ as unsigned—go figure—and must fit within the range of
  0.5
 +0.5
  6.28318
- inf     # ‡
+ inf
 -inf
- nan     # ‡
+ nan
+ epsilon
 ```
 
 #### Regular Expression
 
 ```
-[+-]?([0-9][0-9_]*\.[0-9][0-9_]*|inf|nan)
+[+-]?([0-9][0-9_]*\.[0-9][0-9_]*|inf|nan|epsilon)
 ```
 
 #### Notes
@@ -182,7 +181,7 @@ effect on floating-point representation, only sign bit.
 #### Regular Expression
 
 ```
-"([^"\\]|\\[\\"])*"
+"([^"\\]|\\[\\"abefnrtv])*"
 ```
 
 #### Notes
@@ -242,11 +241,11 @@ happens to be on the current platform.†
 
 ### Endianness
 
- * `native`‡
+ * `native`
 
- * `little`‡
+ * `little`
 
- * `big`‡
+ * `big`
 
 The default endianness is `native`. The `s8`, `u8`, and
 `utf8` types ignore the current endianness, because they
