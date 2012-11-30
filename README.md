@@ -95,11 +95,17 @@ $ pd -e 'big f32' input.raw -o output.bin
 
 # Command-line Options
 
- * `FILE` Read and evaluate `FILE` as Protodata source.
+ * `FILE`
 
- * `-e` Evaluate a string as Protodata source.
+   Read and evaluate `FILE` as Protodata source.
 
- * `-o` Specify an output file; default is standard output.
+ * `-e`, `--eval`
+
+   Evaluate a string as Protodata source.
+
+ * `-o`, `--output`
+
+   Specify an output file; default is standard output.
 
 Multiple `-e` and `FILE` options may be specified; they are
 all concatenated in the order they appeared on the command
