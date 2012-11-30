@@ -5,6 +5,16 @@ originally written for prototyping binary file formats.
 After Unix tradition, it’s designed to be lightweight and
 composable, and interact well with other utilities.
 
+# Building
+
+```
+git clone git@github.com:evincarofautumn/protodata.git
+cd protodata
+make
+```
+
+Protodata has been tested with G++ 4.6 on Linux.
+
 # Examples
 
 For the purposes of illustration, assume the following alias:
