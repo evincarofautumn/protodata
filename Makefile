@@ -1,7 +1,8 @@
 INCFLAGS=-I. -Ivendor
 DEPFLAGS=-MD -MP
 WARNFLAGS=$(addprefix -W,all error no-sign-compare)
-CPPFLAGS=$(INCFLAGS) $(DEPFLAGS) $(WARNFLAGS)
+EXTRAFLAGS=-fno-deduce-init-list
+CPPFLAGS=$(INCFLAGS) $(DEPFLAGS) $(WARNFLAGS) $(EXTRAFLAGS)
 CXXFLAGS=-std=c++0x
 SRC=$(wildcard *.cpp)
 

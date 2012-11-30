@@ -5,6 +5,7 @@
 
 #include <utf8.h>
 
+#include <limits>
 #include <map>
 #include <string>
 
@@ -89,6 +90,7 @@ std::vector<Term> parse(const std::vector<uint32_t>& runes) {
     STRING,
     ESCAPE,
   } state = NORMAL;
+  typedef std::numeric_limits<double> double_limits;
   const std::map<std::string, std::vector<Term>> commands {
     { "u8",  { Term::INTEGER, Term::UNSIGNED, Term::WIDTH_8  } },
     { "u16", { Term::INTEGER, Term::UNSIGNED, Term::WIDTH_16 } },
@@ -106,6 +108,10 @@ std::vector<Term> parse(const std::vector<uint32_t>& runes) {
     { "native", { Term::NATIVE } },
     { "little", { Term::LITTLE } },
     { "big",    { Term::BIG } },
+    { "epsilon", { Term::write(double_limits::epsilon()) } },
+    { "nan",     { Term::write(double_limits::quiet_NaN()) } },
+    { "+inf",    { Term::write(double_limits::infinity()) } },
+    { "-inf",    { Term::write(-double_limits::infinity()) } },
   };
   std::vector<Term> result;
   std::string token;
@@ -132,7 +138,8 @@ std::vector<Term> parse(const std::vector<uint32_t>& runes) {
       break;
     case NUMBER:
       if (transition(state, ZERO, U'0', here, end, append)
-        || transition_if(state, DECIMAL, is_decimal, here, end, append))
+        || transition_if(state, DECIMAL, is_decimal, here, end, append)
+        || transition_if(state, IDENTIFIER, is_alphabetic, here, end, append))
         break;
       {
         if (here == end) goto end;
