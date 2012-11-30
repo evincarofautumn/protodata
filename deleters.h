@@ -1,12 +1,14 @@
 #ifndef PROTODATA_DELETERS_H
 #define PROTODATA_DELETERS_H
 
-struct istream_deleter { void operator()(std::istream* p) const {
-  if (p != &std::cin) delete p;
-}};
+#include <iosfwd>
 
-struct ostream_deleter { void operator()(std::ostream* p) const {
-  if (p != &std::cout) delete p;
-}};
+struct istream_deleter {
+  void operator()(std::istream*) const;
+};
+
+struct ostream_deleter {
+  void operator()(std::ostream* p) const;
+};
 
 #endif
