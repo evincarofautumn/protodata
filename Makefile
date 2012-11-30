@@ -19,16 +19,16 @@ clean : clean-pd clean-deps clean-test
 
 .PHONY : clean-pd
 clean-pd :
-	rm pd
-	rm *.o
+	rm -f pd
+	rm -f *.o
 
 .PHONY : clean-deps
 clean-deps :
-	rm *.d
+	rm -f *.d
 
 .PHONY : clean-test
 clean-test :
-	rm test/*.actual
+	rm -f test/*.actual
 
 .PHONY : Build
 build : pd
