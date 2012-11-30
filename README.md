@@ -7,16 +7,29 @@ composable, and interact well with other utilities.
 
 # Examples
 
+For the purposes of illustration, assume the following alias:
+
+```
+alias dump="hexdump -v -e '/1 \"%02X \"'"
+```
+
 View the hex representation of a floating-point number:
 
 ```
-$ pd -e 'f64 1.0' | hexdump -ve '"%08X "'; echo
+$ pd -e 'f64 1.0' | dump; echo
 ```
 
 View the UTF-16 representation of some UTF-8 text:
 
 ```
-$ pd -e 'utf16 "blah"' | hexdump
+$ pd -e 'utf16 "blah"' | dump; echo
+```
+
+Check out what a big-endian floating-point negative infinity
+looks like up close:
+
+```
+$ pd -e 'big f64 -inf' | dump; echo
 ```
 
 ----
