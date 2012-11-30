@@ -63,40 +63,32 @@ void write_integer(const State& state, const T& input, std::ostream& output) {
     case Term::UNSIGNED:
       switch (state.width) {
       case Term::WIDTH_8:
-        write_integer_value<uint8_t>
-          (state.endianness, input, output);
+        write_integer_value<uint8_t>(state.endianness, input, output);
         break;
       case Term::WIDTH_16:
-        write_integer_value<uint16_t>
-          (state.endianness, input, output);
+        write_integer_value<uint16_t>(state.endianness, input, output);
         break;
       case Term::WIDTH_32:
-        write_integer_value<uint32_t>
-          (state.endianness, input, output);
+        write_integer_value<uint32_t>(state.endianness, input, output);
         break;
       case Term::WIDTH_64:
-        write_integer_value<uint64_t>
-          (state.endianness, input, output);
+        write_integer_value<uint64_t>(state.endianness, input, output);
         break;
       }
       break;
     case Term::SIGNED:
       switch (state.width) {
       case Term::WIDTH_8:
-        write_integer_value<int8_t>
-          (state.endianness, input, output);
+        write_integer_value<int8_t>(state.endianness, input, output);
         break;
       case Term::WIDTH_16:
-        write_integer_value<int16_t>
-          (state.endianness, input, output);
+        write_integer_value<int16_t>(state.endianness, input, output);
         break;
       case Term::WIDTH_32:
-        write_integer_value<int32_t>
-          (state.endianness, input, output);
+        write_integer_value<int32_t>(state.endianness, input, output);
         break;
       case Term::WIDTH_64:
-        write_integer_value<int64_t>
-          (state.endianness, input, output);
+        write_integer_value<int64_t>(state.endianness, input, output);
         break;
       }
       break;
