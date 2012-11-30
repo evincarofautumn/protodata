@@ -1,13 +1,6 @@
 CPPFLAGS=-I. -Ivendor -MD -MP -Wall -Werror -Wno-sign-compare
 CXXFLAGS=-std=c++0x
-SRC= \
-    Term.cpp \
-    deleters.cpp \
-    interpret.cpp \
-    io.cpp \
-    main.cpp \
-    parse.cpp \
-    arguments.cpp
+SRC=$(wildcard *.cpp)
 
 MAKEFLAGS+=--silent
 
