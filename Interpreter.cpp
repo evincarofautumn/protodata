@@ -20,6 +20,8 @@ void Interpreter::run(const std::vector<Term>& terms) {
       state.push(state.top());
       break;
     case Term::POP:
+      if (state.size() <= 1)
+        throw std::runtime_error("Mismatched braces.");
       state.pop();
       break;
     case Term::WRITE_SIGNED:

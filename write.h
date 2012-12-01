@@ -38,8 +38,6 @@ void write_integer_value
   endian_copy(buffer, endianness, output);
 }
 
-// The following macros use 'input' and 'output' non-hygienically.
-
 template<class O, class I>
 void write_float_value
   (Term::Endianness endianness,

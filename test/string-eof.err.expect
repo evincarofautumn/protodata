@@ -1,1 +1,3 @@
-Unexpected end of file in string.
+In input ./string-eof.pd:
+  At line 1, column 5:
+    Unexpected end of file in string.

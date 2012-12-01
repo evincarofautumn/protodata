@@ -1,1 +1,3 @@
-Failed to decode UTF-8: Invalid UTF-8.
+In input ./invalid-utf8.pd:
+  At line 1, column 0:
+    Invalid UTF-8
