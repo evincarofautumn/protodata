@@ -290,8 +290,6 @@ u32
 30 { u8 4 5 6 }
 ```
 
-There is no requirement that braces must be balanced.†
-
 # Planned Features
 
 ## Templates and Binary Input
