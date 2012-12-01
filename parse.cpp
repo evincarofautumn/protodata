@@ -76,13 +76,24 @@ namespace {
 
 }
 
-void parse(const std::vector<uint32_t>& runes, Interpreter& interpreter) {
+void parse(std::istream& input, Interpreter& interpreter) {
   State state = NORMAL;
   std::vector<Term> terms;
   std::string token;
   auto append = std::back_inserter(token);
+  std::vector<uint32_t> runes;
   auto here = runes.begin(), end = runes.end();
   while (true) {
+    if (here == end) {
+      std::string line;
+      std::getline(input, line);
+      runes.clear();
+      utf8::utf8to32(line.begin(), line.end(), std::back_inserter(runes));
+      if (!input.eof())
+        runes.push_back(U'\n');
+      here = runes.begin();
+      end = runes.end();
+    }
     switch (state) {
     case NORMAL:
       token.clear();
@@ -105,9 +116,9 @@ void parse(const std::vector<uint32_t>& runes, Interpreter& interpreter) {
         || transition_if(state, DECIMAL, is_decimal, here, end, append)
         || transition_if(state, IDENTIFIER, is_alphabetic, here, end, append))
         break;
+      if (here == end)
+        goto end;
       {
-        if (here == end)
-          goto end;
         std::string message("Invalid character: '");
         utf8::append(*here, std::back_inserter(message));
         message += "'.";

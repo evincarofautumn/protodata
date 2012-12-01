@@ -1,6 +1,5 @@
 #include <Interpreter.h>
 #include <arguments.h>
-#include <io.h>
 #include <parse.h>
 
 #include <util.h>
@@ -18,7 +17,7 @@ int main(int argc, char** argv) try {
   vector<Term> terms;
   Interpreter interpreter(*output);
   for (const auto& input : inputs)
-    parse(read(*input), interpreter);
+    parse(*input, interpreter);
 } catch (const utf8::exception& exception) {
   std::cerr << "Failed to decode UTF-8: " << exception.what() << ".\n";
   return 1;

@@ -2,10 +2,11 @@
 #define PROTODATA_PARSE_H
 
 #include <cstdint>
+#include <iosfwd>
 #include <vector>
 
 class Interpreter;
 
-void parse(const std::vector<uint32_t>&, Interpreter&);
+void parse(std::istream&, Interpreter&);
 
 #endif
