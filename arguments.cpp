@@ -93,7 +93,8 @@ std::tuple<std::vector<unique_istream>, unique_ostream>
     } else if ((*argument)[0] == '-') {
       throw unknown_option(*argument);
     } else {
-      inputs.push_back(unique_istream(new std::ifstream(*argument)));
+      inputs.push_back(unique_istream
+        (new std::ifstream(*argument, ios::binary)));
     }
   }
   if (inputs.empty())
