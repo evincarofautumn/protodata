@@ -31,8 +31,13 @@ build : pd
 pd : $(SRC:%.cpp=%.o)
 	$(CXX) -o $@ $^
 
-.PHONY : test
-test :
-	./test/run.sh $(realpath ./pd)
+TESTS=$(basename $(notdir $(wildcard test/*.pd)))
+define TESTRULE
+test-$1 :
+	@ ./test/run.sh $$(realpath ./pd) $1
+test : test-$1
+endef
+.PHONY : $(foreach TEST,$(TESTS),test-$(TEST))
+$(foreach TEST,$(TESTS),$(eval $(call TESTRULE,$(TEST))))
 
 -include $(SRC:%.cpp=%.d)
