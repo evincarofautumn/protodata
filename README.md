@@ -93,6 +93,9 @@ Protodata, however, we can simply use the `big` command:
 $ pd -e 'big f32' input.raw -o output.bin
 ```
 
+Like the C version, Protodata consumes input lazily and
+produces output eagerly, making it suitable for streaming.
+
 # Command-line Options
 
  * `FILE`
