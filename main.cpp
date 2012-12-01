@@ -13,8 +13,8 @@
 int main(int argc, char** argv) try {
   using namespace std;
   auto parsed_arguments = parse_arguments(argc, argv);
-  const auto inputs = std::move(get<0>(parsed_arguments));
-  const auto output = std::move(get<1>(parsed_arguments));
+  const auto inputs = move(get<0>(parsed_arguments));
+  const auto output = move(get<1>(parsed_arguments));
   vector<Term> terms;
   for (const auto& input : inputs) {
     const auto parsed = parse(read(*input));
