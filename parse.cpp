@@ -3,6 +3,7 @@
 #include <Interpreter.h>
 #include <Term.h>
 #include <chartype.h>
+#include <nested_exception.h>
 #include <util.h>
 
 #include <utf8.h>
@@ -13,70 +14,85 @@
 
 namespace {
 
-  typedef std::numeric_limits<double> double_limits;
+typedef std::numeric_limits<double> double_limits;
 
-  const std::map<std::string, std::vector<Term>> commands {
-    { "u8",  { Term::INTEGER, Term::UNSIGNED, Term::WIDTH_8  } },
-    { "u16", { Term::INTEGER, Term::UNSIGNED, Term::WIDTH_16 } },
-    { "u32", { Term::INTEGER, Term::UNSIGNED, Term::WIDTH_32 } },
-    { "u64", { Term::INTEGER, Term::UNSIGNED, Term::WIDTH_64 } },
-    { "s8",  { Term::INTEGER, Term::SIGNED,   Term::WIDTH_8  } },
-    { "s16", { Term::INTEGER, Term::SIGNED,   Term::WIDTH_16 } },
-    { "s32", { Term::INTEGER, Term::SIGNED,   Term::WIDTH_32 } },
-    { "s64", { Term::INTEGER, Term::SIGNED,   Term::WIDTH_64 } },
-    { "f32", { Term::FLOAT, Term::WIDTH_32 } },
-    { "f64", { Term::FLOAT, Term::WIDTH_64 } },
-    { "utf8",  { Term::UNICODE, Term::WIDTH_8  } },
-    { "utf16", { Term::UNICODE, Term::WIDTH_16 } },
-    { "utf32", { Term::UNICODE, Term::WIDTH_32 } },
-    { "native", { Term::NATIVE } },
-    { "little", { Term::LITTLE } },
-    { "big",    { Term::BIG } },
-    { "epsilon", { Term::write(double_limits::epsilon()) } },
-    { "nan",     { Term::write(double_limits::quiet_NaN()) } },
-    { "+inf",    { Term::write(double_limits::infinity()) } },
-    { "-inf",    { Term::write(-double_limits::infinity()) } },
-  };
+const std::map<std::string, std::vector<Term>> commands {
+  { "u8",  { Term::INTEGER, Term::UNSIGNED, Term::WIDTH_8  } },
+  { "u16", { Term::INTEGER, Term::UNSIGNED, Term::WIDTH_16 } },
+  { "u32", { Term::INTEGER, Term::UNSIGNED, Term::WIDTH_32 } },
+  { "u64", { Term::INTEGER, Term::UNSIGNED, Term::WIDTH_64 } },
+  { "s8",  { Term::INTEGER, Term::SIGNED,   Term::WIDTH_8  } },
+  { "s16", { Term::INTEGER, Term::SIGNED,   Term::WIDTH_16 } },
+  { "s32", { Term::INTEGER, Term::SIGNED,   Term::WIDTH_32 } },
+  { "s64", { Term::INTEGER, Term::SIGNED,   Term::WIDTH_64 } },
+  { "f32", { Term::FLOAT, Term::WIDTH_32 } },
+  { "f64", { Term::FLOAT, Term::WIDTH_64 } },
+  { "utf8",  { Term::UNICODE, Term::WIDTH_8  } },
+  { "utf16", { Term::UNICODE, Term::WIDTH_16 } },
+  { "utf32", { Term::UNICODE, Term::WIDTH_32 } },
+  { "native", { Term::NATIVE } },
+  { "little", { Term::LITTLE } },
+  { "big",    { Term::BIG } },
+  { "epsilon", { Term::write(double_limits::epsilon()) } },
+  { "nan",     { Term::write(double_limits::quiet_NaN()) } },
+  { "+inf",    { Term::write(double_limits::infinity()) } },
+  { "-inf",    { Term::write(-double_limits::infinity()) } },
+};
 
-  template<class I, class O>
-  bool accept(uint32_t, I&, I, O);
+template<class I, class O>
+bool accept(uint32_t, I&, I, O);
 
-  template<class I>
-  bool accept(uint32_t, I&, I);
+template<class I>
+bool accept(uint32_t, I&, I);
 
-  template<class P, class I, class O>
-  bool accept_if(P, I&, I, O);
+template<class P, class I, class O>
+bool accept_if(P, I&, I, O);
 
-  template<class P, class I>
-  bool accept_if(P, I&, I);
+template<class P, class I>
+bool accept_if(P, I&, I);
 
-  template<class T, class... Args>
-  bool transition(T&, const T&, Args&&...);
+template<class T, class... Args>
+bool transition(T&, const T&, Args&&...);
 
-  template<class T, class... Args>
-  bool transition_if(T&, const T&, Args&&...);
+template<class T, class... Args>
+bool transition_if(T&, const T&, Args&&...);
 
-  enum State {
-    NORMAL,
-    NUMBER,
-    COMMENT,
-    IDENTIFIER,
-    ZERO,
-    BINARY,
-    OCTAL,
-    DECIMAL,
-    HEXADECIMAL,
-    FLOAT,
-    STRING,
-    ESCAPE,
-  };
+enum State {
+  NORMAL,
+  NUMBER,
+  COMMENT,
+  IDENTIFIER,
+  ZERO,
+  BINARY,
+  OCTAL,
+  DECIMAL,
+  HEXADECIMAL,
+  FLOAT,
+  STRING,
+  ESCAPE,
+};
 
-  Term write_double_term(const std::string&);
-  Term write_integer_term(const std::string&, int);
+Term write_double_term(const std::string&);
+Term write_integer_term(const std::string&, int);
 
 }
 
+void parse_internal
+  (std::istream&, Interpreter&, unsigned int&, unsigned int&);
+
 void parse(std::istream& input, Interpreter& interpreter) {
+  unsigned int line = 1;
+  unsigned int column = 0;
+  try {
+    parse_internal(input, interpreter, line, column);
+  } catch (...) {
+    ::throw_with_nested(std::runtime_error
+      (join("At line ", line, ", column ", column, ":")));
+  }
+}
+
+void parse_internal(std::istream& input, Interpreter& interpreter,
+  unsigned int& line, unsigned int& column) {
   State state = NORMAL;
   std::vector<Term> terms;
   std::string token;
@@ -85,18 +101,21 @@ void parse(std::istream& input, Interpreter& interpreter) {
   auto here = runes.begin(), end = runes.end();
   while (true) {
     if (here == end) {
-      std::string line;
-      std::getline(input, line);
+      std::string buffer;
+      std::getline(input, buffer);
       runes.clear();
-      utf8::utf8to32(line.begin(), line.end(), std::back_inserter(runes));
-      if (!input.eof())
+      utf8::utf8to32(buffer.begin(), buffer.end(), std::back_inserter(runes));
+      if (!input.eof()) {
         runes.push_back(U'\n');
+        ++line;
+      }
       here = runes.begin();
       end = runes.end();
     }
     switch (state) {
     case NORMAL:
       token.clear();
+      column = here - runes.begin();
       if (accept_if(is_whitespace, here, end)
         || transition(state, STRING, U'"', here, end)
         || transition_if(state, IDENTIFIER, is_alphabetic, here, end, append)
@@ -230,95 +249,95 @@ void parse(std::istream& input, Interpreter& interpreter) {
 
 namespace {
 
-  Term write_double_term(const std::string& token) {
-    char* boundary;
-    const auto value = std::strtod(token.c_str(), &boundary);
-    if (boundary != token.c_str() + token.size())
-      throw std::runtime_error
-        (join("Invalid floating-point literal: \"", token, "\""));
+Term write_double_term(const std::string& token) {
+  char* boundary;
+  const auto value = std::strtod(token.c_str(), &boundary);
+  if (boundary != token.c_str() + token.size())
+    throw std::runtime_error
+      (join("Invalid floating-point literal: \"", token, "\""));
+  return Term::write(value);
+}
+
+Term write_integer_term(const std::string& token, int base) {
+  const bool has_sign = token[0] == '-' || token[0] == '+';
+  char* boundary;
+  const auto begin = token.c_str(), end = begin + token.size();
+  if (has_sign) {
+    Term::Signed value = std::strtoll(begin, &boundary, base);
+    if (boundary != end)
+      throw std::runtime_error(join("Invalid base-", base,
+        " signed integer literal: \"", token, "\""));
+    return Term::write(value);
+  } else {
+    Term::Unsigned value = std::strtoull(begin, &boundary, base);
+    if (boundary != end)
+      throw std::runtime_error(join("Invalid base-", base,
+        " unsigned integer literal: \"", token, "\""));
     return Term::write(value);
   }
+}
 
-  Term write_integer_term(const std::string& token, int base) {
-    const bool has_sign = token[0] == '-' || token[0] == '+';
-    char* boundary;
-    const auto begin = token.c_str(), end = begin + token.size();
-    if (has_sign) {
-      Term::Signed value = std::strtoll(begin, &boundary, base);
-      if (boundary != end)
-        throw std::runtime_error(join("Invalid base-", base,
-                                      " signed integer literal: \"", token, "\""));
-      return Term::write(value);
-    } else {
-      Term::Unsigned value = std::strtoull(begin, &boundary, base);
-      if (boundary != end)
-        throw std::runtime_error(join("Invalid base-", base,
-                                      " unsigned integer literal: \"", token, "\""));
-      return Term::write(value);
-    }
-  }
-
-  template<class I, class O>
-  bool accept(uint32_t rune, I& input, I end, O output) {
-    if (input == end)
-      return false;
-    if (*input == rune) {
-      utf8::append(*input, output);
-      ++input;
-      return true;
-    }
+template<class I, class O>
+bool accept(uint32_t rune, I& input, I end, O output) {
+  if (input == end)
     return false;
+  if (*input == rune) {
+    utf8::append(*input, output);
+    ++input;
+    return true;
   }
+  return false;
+}
 
-  template<class I>
-  bool accept(uint32_t rune, I& input, I end) {
-    if (input == end)
-      return false;
-    if (*input == rune) {
-      ++input;
-      return true;
-    }
+template<class I>
+bool accept(uint32_t rune, I& input, I end) {
+  if (input == end)
     return false;
+  if (*input == rune) {
+    ++input;
+    return true;
   }
+  return false;
+}
 
-  template<class P, class I, class O>
-  bool accept_if(P predicate, I& input, I end, O output) {
-    if (input == end)
-      return false;
-    if (predicate(*input)) {
-      utf8::append(*input++, output);
-      return true;
-    }
+template<class P, class I, class O>
+bool accept_if(P predicate, I& input, I end, O output) {
+  if (input == end)
     return false;
+  if (predicate(*input)) {
+    utf8::append(*input++, output);
+    return true;
   }
+  return false;
+}
 
-  template<class P, class I>
-  bool accept_if(P predicate, I& input, I end) {
-    if (input == end)
-      return false;
-    if (predicate(*input)) {
-      ++input;
-      return true;
-    }
+template<class P, class I>
+bool accept_if(P predicate, I& input, I end) {
+  if (input == end)
     return false;
+  if (predicate(*input)) {
+    ++input;
+    return true;
   }
+  return false;
+}
 
-  template<class T, class... Args>
-  bool transition(T& state, const T& target, Args&&... args) {
-    if (accept(std::forward<Args>(args)...)) {
-      state = target;
-      return true;
-    }
-    return false;
+template<class T, class... Args>
+bool transition(T& state, const T& target, Args&&... args) {
+  if (accept(std::forward<Args>(args)...)) {
+    state = target;
+    return true;
   }
+  return false;
+}
 
-  template<class T, class... Args>
-  bool transition_if(T& state, const T& target, Args&&... args) {
-    if (accept_if(std::forward<Args>(args)...)) {
-      state = target;
-      return true;
-    }
-    return false;
+template<class T, class... Args>
+bool transition_if(T& state, const T& target, Args&&... args) {
+  if (accept_if(std::forward<Args>(args)...)) {
+    state = target;
+    return true;
   }
+  return false;
+}
 
 }

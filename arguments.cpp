@@ -55,18 +55,19 @@ public:
     : runtime_error(join("Unknown option: '", option, "'.")) {}
 };
 
-std::tuple<std::vector<unique_istream>, unique_ostream>
+std::tuple<std::vector<Input>, unique_ostream>
   parse_arguments(int count, char** begin) {
   using namespace std;
   --count;
   ++begin;
-  vector<unique_istream> inputs;
+  vector<Input> inputs;
   unique_ostream output;
   bool enable_parsing = true;
   const auto end = begin + count;
   for (auto argument = begin; argument != end; ++argument) {
     if (!enable_parsing) {
-      inputs.push_back(unique_istream(new std::ifstream(*argument)));
+      inputs.push_back({*argument,
+        unique_istream(new std::ifstream(*argument, std::ios::binary))});
       continue;
     }
     if (strcmp(*argument, "-h") == 0
@@ -77,7 +78,8 @@ std::tuple<std::vector<unique_istream>, unique_ostream>
       if (argument + 1 == end)
         throw missing_value(*argument);
       ++argument;
-      inputs.push_back(unique_istream(new std::istringstream(*argument)));
+      inputs.push_back({*argument,
+        unique_istream(new std::istringstream(*argument))});
     } else if (strcmp(*argument, "-o") == 0
       || strcmp(*argument, "--output") == 0) {
       if (output)
@@ -87,18 +89,18 @@ std::tuple<std::vector<unique_istream>, unique_ostream>
       ++argument;
       output.reset(new std::ofstream(*argument, ios::binary));
     } else if (strcmp(*argument, "-") == 0) {
-      inputs.push_back(unique_istream(&cin));
+      inputs.push_back({"STDIN", unique_istream(&cin)});
     } else if (strcmp(*argument, "--") == 0) {
       enable_parsing = false;
     } else if ((*argument)[0] == '-') {
       throw unknown_option(*argument);
     } else {
-      inputs.push_back(unique_istream
-        (new std::ifstream(*argument, ios::binary)));
+      inputs.push_back({*argument,
+        unique_istream(new std::ifstream(*argument, ios::binary))});
     }
   }
   if (inputs.empty())
-    inputs.push_back(unique_istream(&cin));
+    inputs.push_back({"STDIN", unique_istream(&cin)});
   if (!output)
     output.reset(&cout);
   return make_tuple(std::move(inputs), std::move(output));

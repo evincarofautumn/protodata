@@ -11,7 +11,12 @@
 typedef std::unique_ptr<std::istream, istream_deleter> unique_istream;
 typedef std::unique_ptr<std::ostream, ostream_deleter> unique_ostream;
 
-std::tuple<std::vector<unique_istream>, unique_ostream>
+struct Input {
+  const char* name;
+  unique_istream stream;
+};
+
+std::tuple<std::vector<Input>, unique_ostream>
   parse_arguments(int, char**);
 
 #endif

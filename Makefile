@@ -33,6 +33,6 @@ pd : $(SRC:%.cpp=%.o)
 
 .PHONY : test
 test :
-	./test/run.sh ./pd
+	./test/run.sh $(realpath ./pd)
 
 -include $(SRC:%.cpp=%.d)
