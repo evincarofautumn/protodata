@@ -33,8 +33,7 @@ public:
       "\n"
       "'pd' consumes input and produces output eagerly. It returns\n"
       "0 if all input was consumed, or 1 if there was an error;\n"
-      "the cause of failure, if any, is printed on standard error.\n"
-) {}
+      "the cause of failure, if any, is printed on standard error.\n") {}
 };
 
 class missing_value : public std::runtime_error {
