@@ -291,11 +291,13 @@ There is no requirement that braces must be balanced.†
 
 # Planned Features
 
-## Macros
+## Templates and Binary Input
 
-```
-name(...) = { ... }
-```
+You may want to read a binary data file and perform some
+structured query on it, or extract part of the file. This is
+highly dependent on the format of the data in question.
+Protodata templates will allow you to declaratively specify
+a file format, then read and write data in that format.
 
 ## Expressions
 
