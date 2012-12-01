@@ -1,7 +1,7 @@
 #ifndef PROTODATA_WRITE_H
 #define PROTODATA_WRITE_H
 
-#include <State.h>
+#include <Interpreter.h>
 
 #include <util.h>
 
@@ -63,7 +63,8 @@ void write_unicode_value
 }
 
 template<class T>
-void write_integer(const State& state, const T& input, std::ostream& output) {
+void write_integer
+  (const Interpreter::State& state, const T& input, std::ostream& output) {
   const auto& endianness = state.endianness;
   switch (state.format) {
   case Term::INTEGER:
@@ -135,7 +136,8 @@ void write_integer(const State& state, const T& input, std::ostream& output) {
 }
 
 template<class T>
-void write_float(const State& state, const T& input, std::ostream& output) {
+void write_float
+  (const Interpreter::State& state, const T& input, std::ostream& output) {
   switch (state.format) {
   case Term::INTEGER:
     throw std::runtime_error

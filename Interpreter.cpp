@@ -1,13 +1,17 @@
-#include <interpret.h>
+#include <Interpreter.h>
 
-#include <State.h>
 #include <write.h>
 
-#include <stack>
+Interpreter::Interpreter(std::ostream& output)
+  : output(output), state{{State()}} {}
 
-void interpret(const std::vector<Term>& terms, std::ostream& output) {
-  std::stack<State> state;
-  state.push(State());
+Interpreter::State::State() :
+  width(sizeof(int) == 8 ? Term::WIDTH_64 : Term::WIDTH_32),
+  endianness(Term::NATIVE),
+  signedness(Term::UNSIGNED),
+  format(Term::INTEGER) {}
+
+void Interpreter::run(const std::vector<Term>& terms) {
   for (auto term : terms) {
     switch (term.type) {
     case Term::NOOP:
