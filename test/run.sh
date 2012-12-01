@@ -1,6 +1,7 @@
 #!/bin/bash
 
-here="$(cd "$(dirname "$0")" && pwd)"
+cd "$(dirname "$0")"
+here="$(pwd)"
 
 if [ "$#" -lt 1 ]; then
   echo "Usage: run.sh /path/to/pd [test-name]" >&2
@@ -66,9 +67,11 @@ if [ ! -e "$PD" ]; then
 fi
 
 if [ $# -gt 0 ]; then
-  run_test "$here/$1.pd"
+  for test in "$@"; do
+    run_test "./$test.pd"
+  done
 else
-  find "$here" -maxdepth 1 -name '*.pd' | while read test_file; do
+  find . -maxdepth 1 -name '*.pd' | while read test_file; do
     run_test "$test_file"
   done
 fi
