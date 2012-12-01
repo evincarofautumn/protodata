@@ -6,8 +6,6 @@ CPPFLAGS=$(INCFLAGS) $(DEPFLAGS) $(WARNFLAGS) $(EXTRAFLAGS)
 CXXFLAGS=-std=c++0x
 SRC=$(wildcard *.cpp)
 
-MAKEFLAGS+=--silent
-
 .PHONY : all
 all : build test
 
