@@ -248,10 +248,13 @@ common escapes are allowed:
 
    A single- or double-precision floating-point number.
 
- * `utf8`, `utf16`, `utf32`
+ * `utf8`, `utf16`, `utf32`, `ucs2`
 
-   A code point in UTF-8, UTF-16, or UTF-32. The following
-   produces three copies of the same (two-byte) sequence:
+   A Unicode code point in the given transmission format.
+   `utf32` is an alias for `u32`, and `ucs2` for `u16`.
+
+   The following produces three copies of the same
+   (two-byte) sequence:
 
         u8 0xC3 0xA7
         utf8 "ç"
