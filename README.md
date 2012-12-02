@@ -23,26 +23,29 @@ For the purposes of illustration, assume the following alias:
 alias dump="hexdump -v -e '/1 \"%02X \"'"
 ```
 
-View the hex representation of a floating-point number:
+## Floating-point
+
+View the representation of a floating-point number:
 
 ```
 $ pd -e 'f64 1.0' | dump; echo
-```
 
-View the UTF-16 representation of some UTF-8 text:
-
-```
-$ pd -e 'utf16 "blah"' | dump; echo
-```
-
-Check out what a big-endian floating-point negative infinity
-looks like up close:
-
-```
 $ pd -e 'big f64 -inf' | dump; echo
 ```
 
-----
+## Unicode
+
+Convert from UTF-8 to different transmission formats:
+
+```
+$ pd -e 'utf16 "Some UTF-8 text I’d like to reëncode."' | dump; echo
+
+$ pd -e 'ucs2 "Because who needs surrogate pairs?"' | dump; echo
+
+$ pd -e 'u21 "Mind the bits and the bytes will look after themselves."' | dump; echo
+```
+
+## More!
 
 Suppose you have some raw vertex data in `input.raw`:
 
@@ -94,9 +97,17 @@ $ pd -e 'big f32' input.raw -o output.bin
 ```
 
 Like the C version, Protodata consumes input lazily and
-produces output eagerly, making it suitable for streaming.
+produces output eagerly, making it suitable for streaming:
+
+```
+$ cat input.raw | pd -e 'f32' - -o output.bin
+```
 
 # Command-line Options
+
+ * `-h`, `--help`
+
+   Print a help message and exit.
 
  * `FILE`
 
@@ -112,8 +123,7 @@ produces output eagerly, making it suitable for streaming.
 
 Multiple `-e` and `FILE` options may be specified; they are
 all concatenated in the order they appeared on the command
-line, *before* being evaluated and *after* being parsed.
-This means that any *individual* source file or `-e` string
+line. This means any *individual* source file or `-e` string
 is allowed to contain semantically invalid Protodata source,
 as long as the concatenated source is semantically valid.
 
