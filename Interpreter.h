@@ -1,6 +1,7 @@
 #ifndef PROTODATA_INTERPRETER_H
 #define PROTODATA_INTERPRETER_H
 
+#include <Stream.h>
 #include <Term.h>
 
 #include <iosfwd>
@@ -18,7 +19,7 @@ struct Interpreter {
     Term::Format format;
   };
 private:
-  std::ostream& output;
+  Stream output;
   std::stack<State> state;
 };
 

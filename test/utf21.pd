@@ -1,0 +1,4 @@
+# UTF-21: for those who feel that UTF-32 is a waste of 11
+# perfectly good bits. Alignment be damned!
+
+u21 "UTF-21!"
