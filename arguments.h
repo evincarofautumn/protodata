@@ -17,6 +17,6 @@ struct Input {
 };
 
 std::tuple<std::vector<Input>, unique_ostream>
-  parse_arguments(int, char**);
+  parse_arguments(int, const char* const*);
 
 #endif

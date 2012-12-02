@@ -27,7 +27,7 @@ struct type_name {
 
 template<class O, class I>
 void write_integer_value
-  (Term::Endianness endianness, const I& input, Stream& output) {
+  (const Term::Endianness endianness, const I& input, Stream& output) {
   typedef std::numeric_limits<decltype(input)> input_limits;
   typedef std::numeric_limits<O> type_limits;
   if (input < type_limits::min() || input > type_limits::max())
@@ -39,13 +39,13 @@ void write_integer_value
 
 template<class O, class I>
 void write_float_value
-  (Term::Endianness endianness, const I& input, Stream& output) {
+  (const Term::Endianness endianness, const I& input, Stream& output) {
   const O buffer(input);
   endian_copy(buffer, endianness, output);
 }
 
 template<class O, class I>
-void write_unicode_value(Term::Endianness endianness, const I& input,
+void write_unicode_value(const Term::Endianness endianness, const I& input,
   Stream& output, O* (*append)(uint32_t, O*)) {
   const uint32_t rune(input);
   std::array<O, sizeof(uint32_t) / sizeof(O)> buffer;
@@ -181,7 +181,7 @@ inline Term::Endianness platform_endianness() {
 
 template<class T>
 void endian_copy
-  (const T& value, Term::Endianness endianness, Stream& output) {
+  (const T& value, const Term::Endianness endianness, Stream& output) {
   using namespace std;
   array<char, sizeof(T)> buffer;
   const auto begin = reinterpret_cast<const char*>(&value),

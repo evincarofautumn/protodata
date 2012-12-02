@@ -10,7 +10,7 @@ Stream::~Stream() {
   flush();
 }
 
-void Stream::write(char raw) {
+void Stream::write(const char raw) {
   const uint8_t octet = raw;
   if (buffer.empty()) {
     stream.put(octet);
@@ -21,13 +21,13 @@ void Stream::write(char raw) {
   flush();
 }
 
-void Stream::write(uint64_t data, int bits) {
+void Stream::write(const uint64_t data, const int bits) {
   for (int i = bits - 1; i >= 0; --i)
     buffer.push_back(bool(data & (1 << i)));
   flush();
 }
 
-void Stream::write_bit(bool bit) {
+void Stream::write_bit(const bool bit) {
   buffer.push_back(bit);
   flush();
 }

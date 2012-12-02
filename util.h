@@ -6,7 +6,7 @@
 #include <sstream>
 #include <stdexcept>
 
-inline std::string join(std::ostringstream& stream) {
+inline std::string join(const std::ostringstream& stream) {
   return stream.str();
 }
 
@@ -27,7 +27,7 @@ std::string join(const Ts&... xs) {
 
 namespace utf8 {
   template<class u16_iterator>
-  u16_iterator append16(uint32_t rune, u16_iterator result) {
+  u16_iterator append16(const uint32_t rune, u16_iterator result) {
     if (rune > 0xffff) {
       *result++ = static_cast<uint16_t>((rune >> 10) + internal::LEAD_OFFSET);
       *result++ = static_cast<uint16_t>
@@ -38,7 +38,7 @@ namespace utf8 {
     return result;
   }
   template<class u32_iterator>
-  u32_iterator append32(uint32_t rune, u32_iterator result) {
+  u32_iterator append32(const uint32_t rune, u32_iterator result) {
     *result++ = rune;
     return result;
   }

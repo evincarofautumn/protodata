@@ -19,12 +19,10 @@ int main(int argc, char** argv) try {
   const auto output = move(get<1>(parsed_arguments));
   vector<Term> terms;
   Interpreter interpreter(*output);
-  for (const auto& input : inputs) {
-    try {
-      parse(*input.stream, interpreter);
-    } catch (...) {
-      ::throw_with_nested(runtime_error(join("In input ", input.name, ":")));
-    }
+  for (const auto& input : inputs) try {
+    parse(*input.stream, interpreter);
+  } catch (...) {
+    ::throw_with_nested(runtime_error(join("In input ", input.name, ":")));
   }
 } catch (const std::exception& exception) {
   report(exception);

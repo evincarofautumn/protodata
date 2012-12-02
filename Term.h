@@ -57,7 +57,7 @@ public:
   Type type;
   Value value;
 private:
-  Term(Type, void*);
+  Term(Type, const void*);
 };
 
 #endif

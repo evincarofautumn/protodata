@@ -134,7 +134,7 @@ void parse_internal(std::istream& input, Interpreter& interpreter,
         || transition_if(state, IDENTIFIER, is_alphabetic, here, end, append))
         break;
       if (here == end)
-        goto end;
+        return;
       {
         std::string message("Invalid character: '");
         utf8::append(*here, std::back_inserter(message));
@@ -145,7 +145,7 @@ void parse_internal(std::istream& input, Interpreter& interpreter,
       if (transition(state, NORMAL, U'\n', here, end))
         break;
       if (here == end)
-        goto end;
+        return;
       ++here;
       break;
     case IDENTIFIER:
@@ -268,7 +268,6 @@ void parse_internal(std::istream& input, Interpreter& interpreter,
     interpreter.run(terms);
     terms.clear();
   }
-  end: {}
 }
 
 namespace {

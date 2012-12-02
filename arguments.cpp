@@ -36,27 +36,34 @@ public:
       "the cause of failure, if any, is printed on standard error.\n") {}
 };
 
-class missing_value : public std::runtime_error {
-public:
+struct missing_value : std::runtime_error {
   missing_value(const std::string& option)
     : runtime_error(join("Missing value for option: '", option, "'.")) {}
 };
 
-class excessive_value : public std::runtime_error {
-public:
+struct excessive_value : std::runtime_error {
   excessive_value(const std::string& option)
     : runtime_error(join("Too many values for option: '", option, "'.")) {}
 };
 
-class unknown_option : public std::runtime_error {
-public:
+struct unknown_option : std::runtime_error {
   unknown_option(const std::string& option)
     : runtime_error(join("Unknown option: '", option, "'.")) {}
 };
 
+bool streq(const char* const a, const char* const b) {
+  return strcmp(a, b) == 0;
+}
+
+bool match_argument(const char* const argument,
+  const char* const short_name, const char* const long_name) {
+  return streq(argument, short_name) || streq(argument, long_name);
+}
+
 std::tuple<std::vector<Input>, unique_ostream>
-  parse_arguments(int count, char** begin) {
+  parse_arguments(int count, const char* const* begin) {
   using namespace std;
+  const char* const stdin_name = "STDIN";
   --count;
   ++begin;
   vector<Input> inputs;
@@ -66,41 +73,38 @@ std::tuple<std::vector<Input>, unique_ostream>
   for (auto argument = begin; argument != end; ++argument) {
     if (!enable_parsing) {
       inputs.push_back({*argument,
-        unique_istream(new std::ifstream(*argument, std::ios::binary))});
+        unique_istream(new ifstream(*argument, ios::binary))});
       continue;
     }
-    if (strcmp(*argument, "-h") == 0
-      || strcmp(*argument, "--help") == 0) {
+    if (match_argument(*argument, "-h", "--help")) {
       throw print_usage();
-    } else if (strcmp(*argument, "-e") == 0
-      || strcmp(*argument, "--eval") == 0) {
+    } else if (match_argument(*argument, "-e", "--eval")) {
       if (argument + 1 == end)
         throw missing_value(*argument);
       ++argument;
       inputs.push_back({*argument,
-        unique_istream(new std::istringstream(*argument))});
-    } else if (strcmp(*argument, "-o") == 0
-      || strcmp(*argument, "--output") == 0) {
+        unique_istream(new istringstream(*argument))});
+    } else if (match_argument(*argument, "-o", "--output")) {
       if (output)
         throw excessive_value(*argument);
       if (argument + 1 == end)
         throw missing_value(*argument);
       ++argument;
-      output.reset(new std::ofstream(*argument, ios::binary));
-    } else if (strcmp(*argument, "-") == 0) {
-      inputs.push_back({"STDIN", unique_istream(&cin)});
-    } else if (strcmp(*argument, "--") == 0) {
+      output.reset(new ofstream(*argument, ios::binary));
+    } else if (streq(*argument, "-")) {
+      inputs.push_back({stdin_name, unique_istream(&cin)});
+    } else if (streq(*argument, "--")) {
       enable_parsing = false;
-    } else if ((*argument)[0] == '-') {
+    } else if (**argument == '-') {
       throw unknown_option(*argument);
     } else {
       inputs.push_back({*argument,
-        unique_istream(new std::ifstream(*argument, ios::binary))});
+        unique_istream(new ifstream(*argument, ios::binary))});
     }
   }
   if (inputs.empty())
-    inputs.push_back({"STDIN", unique_istream(&cin)});
+    inputs.push_back({stdin_name, unique_istream(&cin)});
   if (!output)
     output.reset(&cout);
-  return make_tuple(std::move(inputs), std::move(output));
+  return make_tuple(move(inputs), move(output));
 }

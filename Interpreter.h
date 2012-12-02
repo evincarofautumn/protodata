@@ -1,6 +1,5 @@
 #ifndef PROTODATA_INTERPRETER_H
 #define PROTODATA_INTERPRETER_H
-
 #include <Stream.h>
 #include <Term.h>
 
