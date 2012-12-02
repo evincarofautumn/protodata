@@ -1,3 +1,5 @@
+Protodata is distributed under the terms of the MIT License.
+
 Copyright © 2012 Jon Purdy
 
 Permission is hereby granted, free of charge, to any person
