@@ -33,7 +33,7 @@ pd : $(SRC:%.cpp=%.o)
 
 TESTS=$(basename $(notdir $(wildcard test/*.pd)))
 define TESTRULE
-test-$1 :
+test-$1 : pd
 	@ ./test/run.sh $$(realpath ./pd) $1
 test : test-$1
 endef
