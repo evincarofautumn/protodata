@@ -17,19 +17,11 @@ namespace {
 typedef std::numeric_limits<double> double_limits;
 
 const std::map<std::string, std::vector<Term>> commands {
-  { "u8",  { Term::INTEGER, Term::UNSIGNED, Term::WIDTH_8  } },
-  { "u16", { Term::INTEGER, Term::UNSIGNED, Term::WIDTH_16 } },
-  { "u32", { Term::INTEGER, Term::UNSIGNED, Term::WIDTH_32 } },
-  { "u64", { Term::INTEGER, Term::UNSIGNED, Term::WIDTH_64 } },
-  { "s8",  { Term::INTEGER, Term::SIGNED,   Term::WIDTH_8  } },
-  { "s16", { Term::INTEGER, Term::SIGNED,   Term::WIDTH_16 } },
-  { "s32", { Term::INTEGER, Term::SIGNED,   Term::WIDTH_32 } },
-  { "s64", { Term::INTEGER, Term::SIGNED,   Term::WIDTH_64 } },
-  { "f32", { Term::FLOAT, Term::WIDTH_32 } },
-  { "f64", { Term::FLOAT, Term::WIDTH_64 } },
-  { "utf8",  { Term::UNICODE, Term::WIDTH_8  } },
-  { "utf16", { Term::UNICODE, Term::WIDTH_16 } },
-  { "utf32", { Term::UNICODE, Term::WIDTH_32 } },
+  { "f32", { Term::FLOAT, Term::Width(32) } },
+  { "f64", { Term::FLOAT, Term::Width(64) } },
+  { "utf8",  { Term::UNICODE, Term::Width(8)  } },
+  { "utf16", { Term::UNICODE, Term::Width(16) } },
+  { "utf32", { Term::UNICODE, Term::Width(32) } },
   { "native", { Term::NATIVE } },
   { "little", { Term::LITTLE } },
   { "big",    { Term::BIG } },
@@ -62,6 +54,8 @@ enum State {
   NUMBER,
   COMMENT,
   IDENTIFIER,
+  SIGNED,
+  UNSIGNED,
   ZERO,
   BINARY,
   OCTAL,
@@ -74,6 +68,7 @@ enum State {
 
 Term write_double_term(const std::string&);
 Term write_integer_term(const std::string&, int);
+unsigned long parse_width(const std::string&);
 
 }
 
@@ -118,6 +113,8 @@ void parse_internal(std::istream& input, Interpreter& interpreter,
       column = here - runes.begin();
       if (accept_if(is_whitespace, here, end)
         || transition(state, STRING, U'"', here, end)
+        || transition(state, UNSIGNED, U'u', here, end, append)
+        || transition(state, SIGNED, U's', here, end, append)
         || transition_if(state, IDENTIFIER, is_alphabetic, here, end, append)
         || transition(state, COMMENT, U'#', here, end)
         || transition(state, NUMBER, U'+', here, end, append)
@@ -162,6 +159,32 @@ void parse_internal(std::istream& input, Interpreter& interpreter,
           command->second.begin(), command->second.end());
       }
       state = NORMAL;
+      break;
+    case UNSIGNED:
+      if (accept_if(is_decimal, here, end, append)
+        || transition_if(state, IDENTIFIER, is_alphabetic, here, end, append)
+        || transition(state, IDENTIFIER, U'_', here, end, append))
+        break;
+      {
+        const auto width = parse_width(token);
+        terms.push_back(Term::INTEGER);
+        terms.push_back(Term::UNSIGNED);
+        terms.push_back(Term::Width(width));
+        state = NORMAL;
+      }
+      break;
+    case SIGNED:
+      if (accept_if(is_decimal, here, end, append)
+        || transition_if(state, IDENTIFIER, is_alphabetic, here, end, append)
+        || transition(state, IDENTIFIER, U'_', here, end, append))
+        break;
+      {
+        const auto width = parse_width(token);
+        terms.push_back(Term::INTEGER);
+        terms.push_back(Term::SIGNED);
+        terms.push_back(Term::Width(width));
+        state = NORMAL;
+      }
       break;
     case ZERO:
       if (transition(state, BINARY, U'b', here, end)
@@ -275,6 +298,19 @@ Term write_integer_term(const std::string& token, int base) {
         " unsigned integer literal: \"", token, "\""));
     return Term::write(value);
   }
+}
+
+unsigned long parse_width(const std::string& token) {
+  const auto begin = token.c_str() + 1;
+  char* boundary;
+  const auto width = std::strtoul(begin, &boundary, 10);
+  if (boundary != token.c_str() + token.size())
+    throw std::runtime_error
+      (join("Invalid unsigned type: '", token, "'."));
+  if (width == 0 || width > 64)
+    throw std::runtime_error
+      (join("Unsupported width of unsigned type: '", token, "'."));
+  return width;
 }
 
 template<class I, class O>

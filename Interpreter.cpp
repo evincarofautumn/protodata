@@ -6,7 +6,7 @@ Interpreter::Interpreter(std::ostream& output)
   : output(output), state{{State()}} {}
 
 Interpreter::State::State() :
-  width(sizeof(int) == 8 ? Term::WIDTH_64 : Term::WIDTH_32),
+  width(sizeof(int) * 8),
   endianness(Term::NATIVE),
   signedness(Term::UNSIGNED),
   format(Term::INTEGER) {}

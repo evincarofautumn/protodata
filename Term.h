@@ -31,15 +31,10 @@ public:
     SET_WIDTH,
     SET_FORMAT,
   };
-  enum Width {
-    WIDTH_8 = 8,
-    WIDTH_16 = 16,
-    WIDTH_32 = 32,
-    WIDTH_64 = 64,
-  };
   typedef int64_t Signed;
   typedef uint64_t Unsigned;
   typedef double Double;
+  typedef unsigned int Width;
   Term();
   Term(Endianness);
   Term(Signedness);
