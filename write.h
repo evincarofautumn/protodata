@@ -3,6 +3,7 @@
 
 #include <Interpreter.h>
 
+#include <Stream.h>
 #include <util.h>
 
 #include <utf8.h>
@@ -17,7 +18,7 @@
 Term::Endianness platform_endianness();
 
 template<class T>
-void endian_copy(const T&, Term::Endianness, std::ostream&);
+void endian_copy(const T&, Term::Endianness, Stream&);
 
 template<class T>
 struct type_name {
@@ -26,9 +27,7 @@ struct type_name {
 
 template<class O, class I>
 void write_integer_value
-  (Term::Endianness endianness,
-  const I& input,
-  std::ostream& output) {
+  (Term::Endianness endianness, const I& input, Stream& output) {
   typedef std::numeric_limits<decltype(input)> input_limits;
   typedef std::numeric_limits<O> type_limits;
   if (input < type_limits::min() || input > type_limits::max())
@@ -40,19 +39,14 @@ void write_integer_value
 
 template<class O, class I>
 void write_float_value
-  (Term::Endianness endianness,
-  const I& input,
-  std::ostream& output) {
+  (Term::Endianness endianness, const I& input, Stream& output) {
   const O buffer(input);
   endian_copy(buffer, endianness, output);
 }
 
 template<class O, class I>
-void write_unicode_value
-  (Term::Endianness endianness,
-  const I& input,
-  std::ostream& output,
-  O* (*append)(uint32_t, O*)) {
+void write_unicode_value(Term::Endianness endianness, const I& input,
+  Stream& output, O* (*append)(uint32_t, O*)) {
   const uint32_t rune(input);
   std::array<O, sizeof(uint32_t) / sizeof(O)> buffer;
   const auto end(append(rune, &buffer[0]));
@@ -62,51 +56,75 @@ void write_unicode_value
 
 template<class T>
 void write_integer
-  (const Interpreter::State& state, const T& input, std::ostream& output) {
+  (const Interpreter::State& state, const T& input, Stream& output) {
   const auto& endianness = state.endianness;
   switch (state.format) {
   case Term::INTEGER:
     switch (state.signedness) {
     case Term::UNSIGNED:
       switch (state.width) {
-      case Term::WIDTH_8:
+      case 8:
         write_integer_value<uint8_t>(endianness, input, output);
         break;
-      case Term::WIDTH_16:
+      case 16:
         write_integer_value<uint16_t>(endianness, input, output);
         break;
-      case Term::WIDTH_32:
+      case 32:
         write_integer_value<uint32_t>(endianness, input, output);
         break;
-      case Term::WIDTH_64:
+      case 64:
         write_integer_value<uint64_t>(endianness, input, output);
         break;
+      default:
+        {
+          const uint64_t buffer(input);
+          if (buffer & ~((1 << state.width) - 1))
+            throw std::runtime_error(join("Value (", buffer,
+              ") exceeds range of unsigned ", state.width, "-bit integer."));
+          output.write(buffer, state.width);
+        }
       }
       break;
     case Term::SIGNED:
       switch (state.width) {
-      case Term::WIDTH_8:
+      case 8:
         write_integer_value<int8_t>(endianness, input, output);
         break;
-      case Term::WIDTH_16:
+      case 16:
         write_integer_value<int16_t>(endianness, input, output);
         break;
-      case Term::WIDTH_32:
+      case 32:
         write_integer_value<int32_t>(endianness, input, output);
         break;
-      case Term::WIDTH_64:
+      case 64:
         write_integer_value<int64_t>(endianness, input, output);
         break;
+      default:
+        {
+          const int64_t promoted(input);
+          if (promoted < -(1 << (state.width - 1))
+            || promoted > (1 << (state.width - 1)) - 1)
+            throw std::runtime_error(join("Value (", promoted,
+              ") exceeds range of signed ", state.width, "-bit integer."));
+          uint64_t buffer;
+          if (promoted < 0) {
+            buffer = -promoted;
+            buffer = (~buffer + 1) & ((1u << state.width) - 1);
+          } else {
+            buffer = promoted;
+          }
+          output.write(buffer, state.width);
+        }
       }
       break;
     }
     break;
   case Term::FLOAT:
     switch (state.width) {
-    case Term::WIDTH_32:
+    case 32:
       write_float_value<float>(endianness, input, output);
       break;
-    case Term::WIDTH_64:
+    case 64:
       write_float_value<double>(endianness, input, output);
       break;
     default:
@@ -115,37 +133,37 @@ void write_integer
     break;
   case Term::UNICODE:
     switch (state.width) {
-    case Term::WIDTH_8:
+    case 8:
       write_unicode_value<uint8_t>(endianness, input, output, utf8::append);
       break;
-    case Term::WIDTH_16:
+    case 16:
       write_unicode_value<uint16_t>(endianness, input, output, utf8::append16);
       break;
-    case Term::WIDTH_32:
+    case 32:
       {
         const uint32_t buffer = input;
         endian_copy(buffer, endianness, output);
       }
       break;
     default:
-      IMPOSSIBLE("invalid Unicode width");
+      IMPOSSIBLE("invalid Unicode bit width");
     }
   }
 }
 
 template<class T>
 void write_float
-  (const Interpreter::State& state, const T& input, std::ostream& output) {
+  (const Interpreter::State& state, const T& input, Stream& output) {
   switch (state.format) {
   case Term::INTEGER:
     throw std::runtime_error
       ("Float values cannot be written in integer format.");
   case Term::FLOAT:
     switch (state.width) {
-    case Term::WIDTH_32:
+    case 32:
       write_float_value<float>(state.endianness, input, output);
       break;
-    case Term::WIDTH_64:
+    case 64:
       write_float_value<double>(state.endianness, input, output);
       break;
     default:
@@ -169,7 +187,7 @@ inline Term::Endianness platform_endianness() {
 
 template<class T>
 void endian_copy
-  (const T& value, Term::Endianness endianness, std::ostream& output) {
+  (const T& value, Term::Endianness endianness, Stream& output) {
   using namespace std;
   array<char, sizeof(T)> buffer;
   const auto begin = reinterpret_cast<const char*>(&value),
@@ -177,7 +195,7 @@ void endian_copy
   copy(begin, end, buffer.begin());
   if (endianness != Term::NATIVE && endianness != platform_endianness())
     reverse(buffer.begin(), buffer.end());
-  output.write(buffer.begin(), sizeof(T));
+  output.write(buffer.begin(), buffer.end());
 }
 
 #endif

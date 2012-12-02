@@ -1,0 +1,3 @@
+In input ./arbitrary-unsigned-out-of-range.pd:
+  At line 2, column 3:
+    Value (2) exceeds range of unsigned 1-bit integer.

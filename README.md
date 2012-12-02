@@ -234,13 +234,15 @@ common escapes are allowed:
 
 ### Size and Encoding
 
- * `s8`, `s16`, `s32`, `s64`
+ * <code>s<var>N</var></code>
 
-   A signed integer of the given bit width.
+   A signed integer with <code><var>N</var></code> bits,
+   where 1 ≤ <code><var>N</var></code> ≤ 64.
 
- * `u8`, `u16`, `u32`, `u64`
+ * <code>u<var>N</var></code>
 
-   An unsigned integer of the given bit width.
+   An unsigned integer with <code><var>N</var></code> bits,
+   where 1 ≤ <code><var>N</var></code> ≤ 64.
 
  * `f32`, `f64`
 
@@ -254,6 +256,9 @@ common escapes are allowed:
         u8 0xC3 0xA7
         utf8 "ç"
         utf8 231
+
+If output ends on a non-8-bit boundary, it will be padded
+with trailing zero bits.
 
 The default type is `unsigned int`, however wide `int`
 happens to be on the current platform.†
