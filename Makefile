@@ -5,6 +5,7 @@ EXTRAFLAGS=-fno-deduce-init-list
 CPPFLAGS+=$(INCFLAGS) $(DEPFLAGS) $(WARNFLAGS) $(EXTRAFLAGS)
 CXXFLAGS+=-std=c++0x
 SRC=$(wildcard *.cpp)
+OBJFILES=$(SRC:%.cpp=%.o)
 
 .PHONY : all
 all : build test
@@ -28,8 +29,8 @@ clean-test :
 .PHONY : build
 build : pd
 
-pd : $(SRC:%.cpp=%.o)
-	$(CXX) -o $@ $^
+pd : $(OBJFILES)
+	$(CXX) -o $@ $(OBJFILES)
 
 TESTS=$(basename $(notdir $(wildcard test/*.pd)))
 define TESTRULE
@@ -41,3 +42,12 @@ endef
 $(foreach TEST,$(TESTS),$(eval $(call TESTRULE,$(TEST))))
 
 -include $(SRC:%.cpp=%.d)
+
+define DEPENDS_ON_MAKEFILE
+$1 : Makefile
+
+endef
+
+# Any changes to this Makefile cause recompilation.
+$(call DEPENDS_ON_MAKEFILE,pd)
+$(foreach OBJ,$(OBJFILES),$(eval $(call DEPENDS_ON_MAKEFILE,$(OBJ))))
