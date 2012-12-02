@@ -2,8 +2,8 @@ INCFLAGS=-I. -Ivendor
 DEPFLAGS=-MD -MP
 WARNFLAGS=$(addprefix -W,all error no-sign-compare)
 EXTRAFLAGS=-fno-deduce-init-list
-CPPFLAGS=$(INCFLAGS) $(DEPFLAGS) $(WARNFLAGS) $(EXTRAFLAGS)
-CXXFLAGS=-std=c++0x
+CPPFLAGS+=$(INCFLAGS) $(DEPFLAGS) $(WARNFLAGS) $(EXTRAFLAGS)
+CXXFLAGS+=-std=c++0x
 SRC=$(wildcard *.cpp)
 
 .PHONY : all
@@ -33,7 +33,7 @@ pd : $(SRC:%.cpp=%.o)
 
 TESTS=$(basename $(notdir $(wildcard test/*.pd)))
 define TESTRULE
-test-$1 :
+test-$1 : pd
 	@ ./test/run.sh $$(realpath ./pd) $1
 test : test-$1
 endef
