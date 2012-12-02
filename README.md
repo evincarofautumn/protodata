@@ -11,6 +11,7 @@ composable, and interact well with other utilities.
 git clone git@github.com:evincarofautumn/protodata.git
 cd protodata
 make
+./pd --help
 ```
 
 Protodata has been tested with G++ 4.6 on Linux.
@@ -165,10 +166,15 @@ Source files must be encoded in UTF-8.
 
 #### Notes
 
-Integers with no sign character (`+` or `-`) are interpreted
-as unsigned—go figure—and must fit within the range of
-`uint64_t`; signed integers must fit within the range of
-`int64_t`.
+Integers with a sign character (`+` or `-`) are interpreted
+as signed values—go figure—and must fit within the range of
+`int64_t`; unsigned integers are those without a sign
+character, and must fit within the range of `int64_t`.
+Out-of-range values are reported as errors, e.g.:
+
+```
+s32 +0xFFFFFFFF
+```
 
 ### Floating-point
 
@@ -220,25 +226,25 @@ corresponding to Unicode code points. Strings are not
 null-terminated; an empty string is a no-op. The following
 common escapes are allowed:
 
- * `\\` ⇒ `\` = U+005C
-
- * `\"` ⇒ `"` = U+0022
-
  * `\a` ⇒ BEL = U+0007
 
  * `\b` ⇒ BS = U+0008
 
- * `\e` ⇒ ESC = U+001B
-
- * `\f` ⇒ FF = U+000C
+ * `\t` ⇒ HT = U+0009
 
  * `\n` ⇒ LF = U+000A
 
+ * `\v` ⇒ VT = U+000B
+
+ * `\f` ⇒ FF = U+000C
+
  * `\r` ⇒ CR = U+000D
 
- * `\t` ⇒ HT = U+0009
+ * `\e` ⇒ ESC = U+001B
 
- * `\v` ⇒ VT = U+000B
+ * `\"` ⇒ `"` = U+0022
+
+ * `\\` ⇒ `\` = U+005C
 
 ## Commands
 
@@ -270,8 +276,9 @@ common escapes are allowed:
         utf8 "ç"
         utf8 231
 
-If output ends on a non-8-bit boundary, it will be padded
-with trailing zero bits.
+If the whole output ends on a non-8-bit boundary, it will be
+padded with trailing zero bits. Individual values are not
+automatically aligned.
 
 The default type is `unsigned int`, however wide `int`
 happens to be on the current platform.†
@@ -284,8 +291,9 @@ happens to be on the current platform.†
 
  * `big`
 
-The default endianness is `native`. The `s8`, `u8`, and
-`utf8` types ignore the current endianness.
+The default endianness is `native`.
+
+**Endianness affects *only* 16-, 32-, and 64-bit types!**†
 
 ### Compiler State
 
@@ -310,22 +318,21 @@ u32
 
 # Planned Features
 
-## Templates and Binary Input
+## Macros and Expressions
 
-You may want to read a binary data file and perform some
-structured query on it, or extract part of the file. This is
-highly dependent on the format of the data in question.
-Protodata templates will allow you to declaratively specify
-a file format, then read and write data in that format.
-
-## Expressions
+Macro definitions such as:
 
 ```
-( ... )
+c_string(str){str {u8 0}}
+pascal_string(type, str){{type length(str)} str}
 ```
 
-Evaluate an expression with `+`, `-`, `*`, `/`, and `%`
-operators, as well as the following sorts of functions:
+Expressions with `+`, `-`, `*`, `/`, and `%` operators, as
+well as the following sorts of functions:
+
+ * `here()`
+
+   The current output position.
 
  * `align(N = 1, X = 0)`
 
