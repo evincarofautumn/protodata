@@ -139,12 +139,6 @@ void write_integer
     case 16:
       write_unicode_value<uint16_t>(endianness, input, output, utf8::append16);
       break;
-    case 32:
-      {
-        const uint32_t buffer = input;
-        endian_copy(buffer, endianness, output);
-      }
-      break;
     default:
       IMPOSSIBLE("invalid Unicode bit width");
     }
