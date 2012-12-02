@@ -8,7 +8,8 @@
 #include <stack>
 #include <vector>
 
-struct Interpreter {
+class Interpreter {
+public:
   Interpreter(std::ostream&);
   void run(const std::vector<Term>&);
   struct State {
