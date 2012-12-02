@@ -257,6 +257,9 @@ common escapes are allowed:
         utf8 "ç"
         utf8 231
 
+If output ends on a non-8-bit boundary, it will be padded
+with trailing zero bits.
+
 The default type is `unsigned int`, however wide `int`
 happens to be on the current platform.†
 
