@@ -8,32 +8,30 @@
 #include <sstream>
 #include <stdexcept>
 
-class print_usage : public std::runtime_error {
-public:
-  print_usage()
-    : runtime_error("pd - The Protodata Compiler\n"
-      "\n"
-      "Usage:\n"
-      "\n"
-      "\tpd (IN)*\n"
-      "\t\t((-e|--eval) STRING)*\n"
-      "\t\t((-o|--output) OUT)?\n"
-      "\t\t(-- (IN)*)?\n"
-      "\n"
-      "'pd' takes zero or more Protodata source files (IN), zero or\n"
-      "more Protodata one-liners to execute ('-e COMMAND'), and an\n"
-      "optional output file ('-o OUT'). It concatenates and\n"
-      "compiles all sources into one composite output. If no input\n"
-      "or output is specified, then source is read from standard\n"
-      "input or compiled to standard output, respectively.\n"
-      "\n"
-      "To read from standard input explicitly, use a hyphen ('-')\n"
-      "in place of a file path. To read from files whose names may\n"
-      "begin with dashes, precede them with a double dash ('--').\n"
-      "\n"
-      "'pd' consumes input and produces output eagerly. It returns\n"
-      "0 if all input was consumed, or 1 if there was an error;\n"
-      "the cause of failure, if any, is printed on standard error.\n") {}
+struct print_usage : std::runtime_error {
+  print_usage() : runtime_error("pd - The Protodata Compiler\n"
+    "\n"
+    "Usage:\n"
+    "\n"
+    "    pd  (IN)*\n"
+    "        ((-e|--eval) STRING)*\n"
+    "        ((-o|--output) OUT)?\n"
+    "        (-- (IN)*)?\n"
+    "\n"
+    "'pd' takes zero or more Protodata source files (IN), zero or\n"
+    "more Protodata strings to execute ('-e COMMAND'), and an\n"
+    "optional output file ('-o OUT'). It concatenates and\n"
+    "compiles all sources into one composite output. If no input\n"
+    "or output is specified, then source is read from standard\n"
+    "input or compiled to standard output, respectively.\n"
+    "\n"
+    "To read from standard input explicitly, use a hyphen ('-')\n"
+    "in place of a file path. To read from files whose names may\n"
+    "begin with dashes, precede them with a double dash ('--').\n"
+    "\n"
+    "'pd' reads lazily and writes eagerly. It returns 0 if all\n"
+    "input was consumed, or 1 if there was an error; the cause of\n"
+    "failure, if any, is printed on standard error.\n") {}
 };
 
 struct missing_value : std::runtime_error {
