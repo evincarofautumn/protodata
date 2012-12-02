@@ -34,13 +34,6 @@ function run_test {
     exit 1
   fi
 
-  diff -q "$expect_out" "$actual_out"
-  if [ "$?" != 0 ]; then
-    echo "Test '$test_name' FAILED." >&2
-    echo "Positive test output does not match expected." >&2
-    exit 1
-  fi
-
   diff -u "$expect_err" "$actual_err"
   if [ "$?" != 0 ]; then
     echo "Test '$test_name' FAILED." >&2
@@ -52,6 +45,13 @@ function run_test {
     echo "Actual:" >&2
     cat "$actual_err" >&2
     echo
+    exit 1
+  fi
+
+  diff -q "$expect_out" "$actual_out"
+  if [ "$?" != 0 ]; then
+    echo "Test '$test_name' FAILED." >&2
+    echo "Positive test output does not match expected." >&2
     exit 1
   fi
 
