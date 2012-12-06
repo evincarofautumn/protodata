@@ -45,14 +45,14 @@
 
 ## Style Guide
 
-Protodata is written in C++11 using two-space indentation
-and One True Brace Style. There is a general preference for
-functions over classes, STL algorithms over explicit loops,
-and `const` over non-`const` variables. Macros are okay, but
-remember to `#undef` them or prefer templates where
-possible. Classes are in `CamelCase`, functions and
-variables in `underscore_case()`, and macros in
-`SHOUTY_CASE`.
+Protodata is written in C++11 using two-space indentation,
+One True Brace Style, and the 80-column rule. There is a
+general preference for functions over classes, STL
+algorithms over explicit loops, and `const` over non-`const`
+variables. Macros are okay, but remember to `#undef` them or
+prefer templates where possible. Classes are in `CamelCase`,
+functions and variables in `underscore_case()`, and macros
+in `SHOUTY_CASE`.
 
 Headers are always included with `<...>`, not `"..."`. More
 specific headers should be included before less specific
