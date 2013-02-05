@@ -184,8 +184,7 @@ void endian_copy
   (const T& value, const Term::Endianness endianness, Stream& output) {
   using namespace std;
   array<char, sizeof(T)> buffer;
-  const auto begin = reinterpret_cast<const char*>(&value),
-    end = begin + sizeof(T);
+  const auto begin = serialize_cast(&value), end = begin + sizeof(T);
   copy(begin, end, buffer.begin());
   if (endianness != Term::NATIVE && endianness != platform_endianness())
     reverse(buffer.begin(), buffer.end());
