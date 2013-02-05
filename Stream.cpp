@@ -2,6 +2,8 @@
 
 #include <ostream>
 
+// Extra bits are padded with trailing zero bits to fill the
+// last octet of the stream.
 Stream::~Stream() {
   const auto extra = buffer.size() % 8;
   if (extra != 0)
@@ -10,6 +12,8 @@ Stream::~Stream() {
   flush();
 }
 
+// Writes an octet. If the write is aligned on an octet
+// boundary, it is also unbuffered.
 void Stream::write(const char raw) {
   const uint8_t octet = raw;
   if (buffer.empty()) {
@@ -32,6 +36,7 @@ void Stream::write_bit(const bool bit) {
   flush();
 }
 
+// Flushes buffered bits, one octet at a time.
 void Stream::flush() {
   while (buffer.size() >= 8) {
     uint8_t octet = 0;
