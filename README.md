@@ -13,7 +13,7 @@ make
 ./pd --help
 ```
 
-Protodata has been tested with G++ 4.6 on Linux.
+Protodata has been tested with G++ 4.6 and Clang 3.2 on Linux.
 
 # Examples
 
