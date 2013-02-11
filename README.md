@@ -8,7 +8,7 @@ composable, and interact well with other utilities.
 # Building
 
 ```
-git clone git@github.com:evincarofautumn/protodata.git
+git clone git://github.com/evincarofautumn/protodata.git
 cd protodata
 make
 ./pd --help
