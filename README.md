@@ -124,7 +124,7 @@ A Protodata source file consists of a series of *values* and *commands*, delimit
 # A useless comment for demonstration purposes.
 ```
 
-Source files must be encoded in UTF-8.
+**Source files must be encoded in UTF-8.**
 
 ## Values
 
