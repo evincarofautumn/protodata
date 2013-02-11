@@ -228,15 +228,15 @@ The default endianness is `native`.
 
 ### Compiler State
 
- * `{`
+The compiler state consists of the current type and endianness. It can be saved and restored with the following commands:
 
-   Save the compiler state.
+<table>
+<tr><th>Command</th><th>Description</th></tr>
+<tr><td><code>{</code></td><td>Push the compiler state.</td></tr>
+<tr><td><code>}</code></td><td>Pop the compiler state.</td></tr>
+</table>
 
- * `}`
-
-   Restore the compiler state.
-
-These commands are best explained by example. Here, `10`, `20`, and `30` will be written as `u32`, while `1` through `6` will all be written as `u8`:
+These are perhaps best explained by example. Here, `10`, `20`, and `30` will be written as `u32`, while `1` through `6` will all be written as `u8`:
 
 ```
 u32
