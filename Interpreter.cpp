@@ -3,7 +3,9 @@
 #include <write.h>
 
 Interpreter::Interpreter(std::ostream& output)
-  : output(output), state{{State()}} {}
+  : output(output) {
+  state.push(State());
+}
 
 Interpreter::State::State() :
   width(sizeof(int) * 8),

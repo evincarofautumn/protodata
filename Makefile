@@ -1,8 +1,8 @@
 INCFLAGS=-I. -Ivendor
 DEPFLAGS=-MD -MP
-WARNFLAGS=$(addprefix -W,all error no-sign-compare)
-EXTRAFLAGS=-fno-deduce-init-list
-CPPFLAGS+=$(INCFLAGS) $(DEPFLAGS) $(WARNFLAGS) $(EXTRAFLAGS)
+WARNFLAGS=$(addprefix -W,all no-sign-compare)
+LDFLAGS+=-lstdc++
+CPPFLAGS+=$(INCFLAGS) $(DEPFLAGS) $(WARNFLAGS)
 CXXFLAGS+=-std=c++0x
 SRC=$(wildcard *.cpp)
 OBJFILES=$(SRC:%.cpp=%.o)
@@ -30,7 +30,7 @@ clean-test :
 build : pd
 
 pd : $(OBJFILES)
-	$(CXX) -o $@ $(OBJFILES)
+	$(CXX) -o $@ $(LDFLAGS) $(OBJFILES)
 
 TESTS=$(basename $(notdir $(wildcard test/*.pd)))
 define TESTRULE

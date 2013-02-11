@@ -12,6 +12,8 @@ typedef std::unique_ptr<std::istream, istream_deleter> unique_istream;
 typedef std::unique_ptr<std::ostream, ostream_deleter> unique_ostream;
 
 struct Input {
+  Input(const char* name, unique_istream&& stream)
+    : name(name), stream(std::move(stream)) {}
   const char* name;
   unique_istream stream;
 };

@@ -16,20 +16,22 @@ namespace {
 
 typedef std::numeric_limits<double> double_limits;
 
-const std::map<std::string, std::vector<Term>> commands {
-  { "f32", { Term::FLOAT, Term::Width(32) } },
-  { "f64", { Term::FLOAT, Term::Width(64) } },
-  { "utf8",  { Term::UNICODE, Term::Width(8)  } },
-  { "utf16", { Term::UNICODE, Term::Width(16) } },
-  { "utf32", { Term::INTEGER, Term::Width(32) } },
-  { "ucs2",  { Term::INTEGER, Term::Width(16) } },
-  { "native", { Term::NATIVE } },
-  { "little", { Term::LITTLE } },
-  { "big",    { Term::BIG } },
-  { "epsilon", { Term::write(double_limits::epsilon()) } },
-  { "nan",     { Term::write(double_limits::quiet_NaN()) } },
-  { "+inf",    { Term::write(double_limits::infinity()) } },
-  { "-inf",    { Term::write(-double_limits::infinity()) } },
+typedef std::vector<Term> Terms;
+typedef std::pair<std::string, Terms> Command;
+const std::map<std::string, Terms> commands {
+  Command("f32",     Terms { Term::FLOAT, Term::Width(32) }),
+  Command("f64",     Terms { Term::FLOAT, Term::Width(64) }),
+  Command("utf8",    Terms { Term::UNICODE, Term::Width(8)  }),
+  Command("utf16",   Terms { Term::UNICODE, Term::Width(16) }),
+  Command("utf32",   Terms { Term::INTEGER, Term::Width(32) }),
+  Command("ucs2",    Terms { Term::INTEGER, Term::Width(16) }),
+  Command("native",  Terms { Term::NATIVE }),
+  Command("little",  Terms { Term::LITTLE }),
+  Command("big",     Terms { Term::BIG }),
+  Command("epsilon", Terms { Term::write(double_limits::epsilon()) }),
+  Command("nan",     Terms { Term::write(double_limits::quiet_NaN()) }),
+  Command("+inf",    Terms { Term::write(double_limits::infinity()) }),
+  Command("-inf",    Terms { Term::write(-double_limits::infinity()) }),
 };
 
 template<class I, class O>

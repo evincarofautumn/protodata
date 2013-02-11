@@ -70,8 +70,8 @@ std::tuple<std::vector<Input>, unique_ostream>
   const auto end = begin + count;
   for (auto argument = begin; argument != end; ++argument) {
     if (!enable_parsing) {
-      inputs.push_back({*argument,
-        unique_istream(new ifstream(*argument, ios::binary))});
+      inputs.push_back(Input(*argument,
+        unique_istream(new ifstream(*argument, ios::binary))));
       continue;
     }
     if (match_argument(*argument, "-h", "--help")) {
@@ -80,8 +80,8 @@ std::tuple<std::vector<Input>, unique_ostream>
       if (argument + 1 == end)
         throw missing_value(*argument);
       ++argument;
-      inputs.push_back({*argument,
-        unique_istream(new istringstream(*argument))});
+      inputs.push_back(Input(*argument,
+        unique_istream(new istringstream(*argument))));
     } else if (match_argument(*argument, "-o", "--output")) {
       if (output)
         throw excessive_value(*argument);
@@ -90,18 +90,18 @@ std::tuple<std::vector<Input>, unique_ostream>
       ++argument;
       output.reset(new ofstream(*argument, ios::binary));
     } else if (streq(*argument, "-")) {
-      inputs.push_back({stdin_name, unique_istream(&cin)});
+      inputs.push_back(Input(stdin_name, unique_istream(&cin)));
     } else if (streq(*argument, "--")) {
       enable_parsing = false;
     } else if (**argument == '-') {
       throw unknown_option(*argument);
     } else {
-      inputs.push_back({*argument,
-        unique_istream(new ifstream(*argument, ios::binary))});
+      inputs.push_back(Input(*argument,
+        unique_istream(new ifstream(*argument, ios::binary))));
     }
   }
   if (inputs.empty())
-    inputs.push_back({stdin_name, unique_istream(&cin)});
+    inputs.push_back(Input(stdin_name, unique_istream(&cin)));
   if (!output)
     output.reset(&cout);
   return make_tuple(move(inputs), move(output));
