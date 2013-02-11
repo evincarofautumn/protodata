@@ -147,8 +147,6 @@ Source files must be encoded in UTF-8.
 
 ### Integer
 
-#### Examples
-
 ```
  0      # Decimal, technically.
 -12     # Decimal in the usual sense.
@@ -157,14 +155,6 @@ Source files must be encoded in UTF-8.
 -0o777  # Octal.
 +0xFE   # Hexadecimal.
 ```
-
-#### Regular Expression
-
-```
-[+-]?(0(b[01_]+|o[0-7_]+|x[0-9A-Fa-f_]+|[0-9_]*))
-```
-
-#### Notes
 
 Integers with a sign character (`+` or `-`) are interpreted
 as signed values—go figure—and must fit within the range of
@@ -178,8 +168,6 @@ s32 +0xFFFFFFFF
 
 ### Floating-point
 
-#### Examples
-
 ```
  0.0
 -0.0
@@ -192,34 +180,16 @@ s32 +0xFFFFFFFF
  epsilon
 ```
 
-#### Regular Expression
-
-```
-[+-]?([0-9][0-9_]*\.[0-9][0-9_]*|inf|nan|epsilon)
-```
-
-#### Notes
-
 Floating-point values cannot be represented by `utf` or
 integer types. Unlike for integers, sign characters have no
 effect on floating-point representation, only sign bit.
 
 ### String
 
-#### Examples
-
 ```
 ""
 "salut"
 ```
-
-#### Regular Expression
-
-```
-"([^"\\]|\\[\\"abefnrtv])*"
-```
-
-#### Notes
 
 A string is syntactic sugar for a sequence of integer values
 corresponding to Unicode code points. Strings are not
