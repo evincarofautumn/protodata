@@ -170,25 +170,19 @@ Floating-point values cannot be represented by `utf` or integer types. Unlike fo
 
 A string is syntactic sugar for a sequence of integer values corresponding to Unicode code points. Strings are not null-terminated; an empty string is a no-op. The following common escapes are allowed:
 
- * `\a` ⇒ BEL = U+0007
-
- * `\b` ⇒ BS = U+0008
-
- * `\t` ⇒ HT = U+0009
-
- * `\n` ⇒ LF = U+000A
-
- * `\v` ⇒ VT = U+000B
-
- * `\f` ⇒ FF = U+000C
-
- * `\r` ⇒ CR = U+000D
-
- * `\e` ⇒ ESC = U+001B
-
- * `\"` ⇒ `"` = U+0022
-
- * `\\` ⇒ `\` = U+005C
+<table>
+<tr><th>Escape</th><th>Character</th><th>Unicode</th></tr>
+<tr><td><code>\a</code></td><td>BEL</td><td>U+0007</td></tr>
+<tr><td><code>\b</code></td><td>BS</td><td>U+0008</td></tr>
+<tr><td><code>\t</code></td><td>HT</td><td>U+0009</td></tr>
+<tr><td><code>\n</code></td><td>LF</td><td>U+000A</td></tr>
+<tr><td><code>\v</code></td><td>VT</td><td>U+000B</td></tr>
+<tr><td><code>\f</code></td><td>FF</td><td>U+000C</td></tr>
+<tr><td><code>\r</code></td><td>CR</td><td>U+000D</td></tr>
+<tr><td><code>\e</code></td><td>ESC</td><td>U+001B</td></tr>
+<tr><td><code>\"</code></td><td><tt>"</tt></td><td>U+0022</td></tr>
+<tr><td><code>\\</code></td><td><tt>\</tt></td><td>U+005C</td></tr>
+</table>
 
 ## Commands
 
