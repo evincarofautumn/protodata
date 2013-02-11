@@ -1,6 +1,8 @@
 # Protodata
 
-**Protodata** is a language for describing binary data, originally written for prototyping binary file formats. After Unix tradition, it’s designed to be lightweight and composable, and interact well with other utilities.
+**Protodata** is a language for describing binary data, originally written for prototyping and reverse engineering binary file formats. It is particularly useful for generating annotated data in a custom format, *without* having to write custom editing tools.
+
+After Unix tradition, Protodata is designed to be lightweight and composable, and interact well with other utilities.
 
 # Building
 
