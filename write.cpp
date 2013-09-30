@@ -3,7 +3,6 @@
 #define TYPE_NAME(TYPE, NAME) \
   template<> const char* type_name<TYPE>::value = NAME;
 
-
 TYPE_NAME(uint8_t,  "unsigned 8-bit");
 TYPE_NAME(uint16_t, "unsigned 16-bit");
 TYPE_NAME(uint32_t, "unsigned 32-bit");
