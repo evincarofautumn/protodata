@@ -109,7 +109,7 @@ void write_integer
           uint64_t buffer;
           if (promoted < 0) {
             buffer = -promoted;
-            buffer = (~buffer + 1) & ((1u << state.width) - 1);
+            buffer = (~buffer + 1) & ((1ull << state.width) - 1);
           } else {
             buffer = promoted;
           }
