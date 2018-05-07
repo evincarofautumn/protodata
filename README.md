@@ -139,7 +139,7 @@ A Protodata source file consists of a series of *values* and *commands*, delimit
 +0xFE   # Hexadecimal.
 ```
 
-Integers with a sign character (`+` or `-`) are interpreted as signed values—go figure—and must fit within the range of `int64_t`; unsigned integers are those without a sign character, and must fit within the range of `int64_t`. Out-of-range values are reported as errors, e.g.:
+Integers with a sign character (`+` or `-`) are interpreted as signed values—go figure—and must fit within the range of `int64_t`; unsigned integers are those without a sign character, and must fit within the range of `uint64_t`. Out-of-range values are reported as errors, e.g.:
 
 ```
 s32 +0xFFFFFFFF
