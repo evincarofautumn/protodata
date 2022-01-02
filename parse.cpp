@@ -34,6 +34,11 @@ const std::map<std::string, Terms> commands {
   Command("-inf",    Terms { Term::write(-double_limits::infinity()) }),
 };
 
+typedef std::pair<std::string, Term::Function> Function;
+const std::map<std::string, Term::Function> functions {
+    Function("file", Term::FILE),
+};
+
 template<class I, class O>
 bool accept(uint32_t, I&, I, O);
 
@@ -67,6 +72,8 @@ enum State {
   FLOAT,
   STRING,
   ESCAPE,
+  FUNCTION,
+  PARAMETERS,
 };
 
 Term write_double_term(const std::string&);
@@ -97,6 +104,7 @@ void parse_internal(std::istream& input, Interpreter& interpreter,
   auto append = std::back_inserter(token);
   std::vector<uint32_t> runes;
   auto here = runes.begin(), end = runes.end();
+  int functionDepth = 0;
   while (true) {
     if (here == end) {
       std::string buffer;
@@ -155,14 +163,33 @@ void parse_internal(std::istream& input, Interpreter& interpreter,
         break;
       {
         const auto command = commands.find(token);
-        if (command == commands.end())
+        const auto function = functions.find(token);
+
+        if (command == commands.end() && function == functions.end())
           throw std::runtime_error(join
             ("Unimplemented command: '", token, "'.\n"));
-        terms.insert(terms.end(),
-          command->second.begin(), command->second.end());
+
+        if (command != commands.end()) {
+          terms.insert(terms.end(),
+                       command->second.begin(), command->second.end());
+          state = NORMAL;
+        } else {
+          terms.emplace_back(function->second);
+          state = FUNCTION;
+        }
       }
-      state = NORMAL;
       break;
+    case FUNCTION:
+      if (accept_if(is_whitespace, here, end))
+        break;
+
+      if (transition(state, PARAMETERS, U'(', here, end)) {
+        functionDepth++;
+        break;
+      }
+      throw std::runtime_error(
+        join("Unexpected token when parsing function call: '", token, "'.\n")
+      );
     case UNSIGNED:
       if (accept_if(is_decimal, here, end, append)
         || transition_if(state, IDENTIFIER, is_alphabetic, here, end, append)
@@ -233,8 +260,31 @@ void parse_internal(std::istream& input, Interpreter& interpreter,
       terms.push_back(write_double_term(token));
       state = NORMAL;
       break;
+    case PARAMETERS:
+      if (accept_if(is_whitespace, here, end))
+        break;
+
+      if (accept(U',', here, end)) {
+        terms.push_back(Term::next_parameter());
+        break;
+      }
+      if (accept(U')', here, end)) {
+        terms.push_back(Term::close_bracket());
+        functionDepth--;
+
+        if (functionDepth == 0)
+          state = NORMAL;
+
+        break;
+      }
+      if (transition(state, STRING, U'"', here, end))
+        break;
+
+      throw std::runtime_error
+        ("Unexpected token in parameter list: " + token + ".\n");
     case STRING:
-      if (transition(state, NORMAL, U'"', here, end)
+      if (transition
+        (state, (functionDepth == 0) ? NORMAL : PARAMETERS, U'"', here, end)
         || transition(state, ESCAPE, U'\\', here, end))
         break;
       if (here == end)

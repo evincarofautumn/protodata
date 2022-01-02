@@ -20,12 +20,18 @@ Term::Term(const Format format) : type(SET_FORMAT) {
   value.as_format = format;
 }
 
+Term::Term(const Function function) : type(FUNCTION) {
+  value.as_function = function;
+}
+
 Term::Term(const Type type, const void* const source = 0) : type(type) {
   switch (type) {
   case NOOP:
     break;
   case PUSH:
   case POP:
+  case FUNCTION_CLOSE_BRACKET:
+  case NEXT_PARAMETER:
     break;
   case WRITE_SIGNED:
     value.as_signed = *static_cast<const Signed*>(source);
@@ -47,6 +53,14 @@ Term Term::push() {
 
 Term Term::pop() {
   return Term(POP);
+}
+
+Term Term::close_bracket() {
+  return Term(FUNCTION_CLOSE_BRACKET);
+}
+
+Term Term::next_parameter() {
+  return Term(NEXT_PARAMETER);
 }
 
 Term Term::write(const uint64_t value) {

@@ -226,6 +226,12 @@ The default endianness is `native`.
 
 **Endianness affects *only* 16-, 32-, and 64-bit types!**†
 
+### Importing Other Files
+
+* `file("filename")`
+
+The file function reads the named file into the output, in-line.
+
 ### Compiler State
 
 The compiler state consists of the current type and endianness. It can be saved and restored with the following commands:
