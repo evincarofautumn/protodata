@@ -265,6 +265,7 @@ void parse_internal(std::istream& input, Interpreter& interpreter,
         }
         terms.push_back(Term::write(value));
         ++here;
+        state = STRING;
       }
     }
     interpreter.run(terms);
