@@ -34,8 +34,7 @@ function run_test {
     exit 1
   fi
 
-  diff -u "$expect_err" "$actual_err"
-  if [ "$?" != 0 ]; then
+  if ! diff -u "$expect_err" "$actual_err"; then
     echo "Test '$test_name' FAILED." >&2
     echo "Negative test output does not match expected." >&2
     echo
@@ -48,8 +47,7 @@ function run_test {
     exit 1
   fi
 
-  diff -q "$expect_out" "$actual_out"
-  if [ "$?" != 0 ]; then
+  if ! diff -q "$expect_out" "$actual_out"; then
     echo "Test '$test_name' FAILED." >&2
     echo "Positive test output does not match expected." >&2
     exit 1
@@ -71,7 +69,7 @@ if [ $# -gt 0 ]; then
     run_test "./$test.pd"
   done
 else
-  find . -maxdepth 1 -name '*.pd' | while read test_file; do
+  find . -maxdepth 1 -name '*.pd' | while read -r test_file; do
     run_test "$test_file"
   done
 fi
