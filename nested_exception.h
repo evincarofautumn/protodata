@@ -1,6 +1,8 @@
 #ifndef PROTODATA_NESTED_EXCEPTION_H
 #define PROTODATA_NESTED_EXCEPTION_H
 
+#include <exception>
+
 // Partial implementation of 'std::nested_exception' because
 // the version shipped with G++ 4.6 was missing a 'throw()'.
 // In C++ we're in the habit of reinventing wheels.
