@@ -18,9 +18,17 @@ public:
     Term::Signedness signedness;
     Term::Format format;
   };
+
+  struct FunctionState {
+      FunctionState(Term::Function function);
+
+      Term::Function function;
+      std::vector<std::string> parameters;
+  };
 private:
   Stream output;
   std::stack<State> state;
+  std::stack<FunctionState> functionState;
 };
 
 #endif

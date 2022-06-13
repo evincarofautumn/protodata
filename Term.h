@@ -2,6 +2,7 @@
 #define PROTODATA_TOKEN_H
 
 #include <cstdint>
+#include <string>
 
 class Term {
 public:
@@ -19,10 +20,16 @@ public:
     FLOAT,
     UNICODE,
   };
+  enum Function {
+    FILE,
+  };
   enum Type {
     NOOP,
     PUSH,
     POP,
+    FUNCTION,
+    FUNCTION_CLOSE_BRACKET,
+    NEXT_PARAMETER,
     WRITE_SIGNED,
     WRITE_UNSIGNED,
     WRITE_DOUBLE,
@@ -40,8 +47,11 @@ public:
   Term(Signedness);
   Term(Width);
   Term(Format);
+  Term(Function);
   static Term push();
   static Term pop();
+  static Term close_bracket();
+  static Term next_parameter();
   static Term write(uint64_t);
   static Term write(int64_t);
   static Term write(double);
@@ -53,6 +63,7 @@ public:
     Signedness as_signedness;
     Width as_width;
     Format as_format;
+    Function as_function;
   };
   Type type;
   Value value;

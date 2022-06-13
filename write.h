@@ -170,6 +170,11 @@ void write_float
   }
 }
 
+template<class T>
+void write_binary(const std::vector<T>& data, Stream& output) {
+  output.write(data.begin(), data.end());
+}
+
 // Conversion via pointer to character type is, to my
 // knowledge, the only way of detecting endianness that is
 // required to work by the C++ standard.
